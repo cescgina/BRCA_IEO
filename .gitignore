@@ -1,0 +1,5 @@
+projectTemplate/
+projectTemplate.zip
+.R*
+*.RData
+*.rds
