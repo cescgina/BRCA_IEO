@@ -8,7 +8,7 @@ metadata(se)$objectCreationDate
 mcols(colData(se), use.names = TRUE) #Phenotypic information
 colData(se)[1:5, 1:5]
 rowRanges(se) #Feature data
-
+names(se) <- rowRanges(se)$symbol
 ##
 dge <- DGEList(counts = assays(se)$counts, genes = mcols(se))
 names(dge) #Fields in DGEList
@@ -89,20 +89,28 @@ for (i in 1:ncol(setmp)) {
   A <- rowMeans(assays(setmp)$logCPM)
   M <- assays(setmp)$logCPM[, i] - A
   samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
-  smoothScatter(A, M, main=samplename, las=1)
-  abline(h=0, col="blue", lwd=2)
+  smoothScatter(A, M, main = samplename, las = 1)
+  abline(h = 0, col = "blue", lwd = 2)
   lo <- lowess(M ~ A)
-  lines(lo$x, lo$y, col="red", lwd=2)
+  lines(lo$x, lo$y, col = "red", lwd = 2)
 }
 
 ## Batch identification
+# https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode
+# tissue source sites (centers, for example 3C -> Columbia University)
 tss <- substr(colnames(se), 6, 7)
 table(tss)
+# Sequencing center(07 -> University of North Carolina)
 center <- substr(colnames(se), 27, 28)
 table(center)
+# plate: Order of plate in a sequence of 96-well plates 
 plate <- substr(colnames(se), 22, 25)
 table(plate)
+# analyte: molecular specimen extracted from a portion. Usually of a particular molecular type; for example, total RNA, or whole genome amplified DNA. R -> RNA
 portionanalyte <- substr(colnames(se), 18, 20)
 table(portionanalyte)
+# vial: portion of a sample
 samplevial <- substr(colnames(se), 14, 16)
 table(samplevial)
+
+table(data.frame(TYPE = se$type, TSS = tss))
