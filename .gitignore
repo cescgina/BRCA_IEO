@@ -3,3 +3,8 @@ projectTemplate.zip
 .R*
 *.RData
 *.rds
+cache/
+css/
+*.md
+*.html
+figure/

@@ -1,0 +1,100 @@
+```{r setup, cache=FALSE, echo=FALSE, results='asis'}
+dumpcssfile <- function(fname) {
+  paste(c('<style type="text/css">', readLines(fname), '</style>\n'),
+        collapse="\n")
+}
+
+opts_chunk$set(cache=TRUE,
+               autodep=TRUE,
+               fig.align="center",
+               comment="")
+
+knit_hooks$set(error=function(x, options) stop(x),
+               fig.cap=function(before, options, envir) {
+                 if (!before) {
+                   paste0('<p class="caption">', options$fig.cap, "</p>")
+                 }
+               })
+
+cat(dumpcssfile(file.path("css", "ieo.css")))
+```
+
+# Analysis of a TCGA RNA-seq data set on Breast invasive carcinoma
+
+### Ainoha Garcia (@upf.edu), Joan F. Gilabert () and Leo ()
+
+## Introduction
+
+## Data import
+
+We start importing the raw table of counts.
+
+```{r}
+library(SummarizedExperiment)
+
+se <- readRDS(file.path("seBRCA.rds"))
+se
+```
+
+Explore the column (phenotypic) data, which in this case corresponds to clinical
+variables, and their corresponding metadata.
+
+```{r}
+dim(colData(se))
+colData(se)[1:5, 1:5]
+mcols(colData(se), use.names=TRUE)
+```
+These metadata consists of two columns of information about the clinical variables.
+One called `labelDescription` contains a succint description of the variable, often
+not more self-explanatory than the variable name itself, and the other called
+'CDEID' corresponds to the so-called `Common Data Element (CDE)` identifier. This
+identifier can be use in https://cdebrowser.nci.nih.gov to search for further
+information about the associated clinical variable using the `Advanced search`
+form and the `Public ID` attribute search.
+
+Now, explore the row (feature) data.
+
+```{r}
+rowRanges(se)
+```
+
+
+## Creation of subsets
+
+We have selected as a criterion for subsetting ....
+
+```{r}
+codesnorm <- colData(se)[colData(se)$type == "normal",]$bcr_patient_barcode
+codestum <- colData(se)[colData(se)$type == "tumor",]$bcr_patient_barcode
+commoncodes <- codesnorm[codesnorm %in% codestum]
+se <- se[,colData(se)$bcr_patient_barcode %in% commoncodes]
+dim(se)
+```
+
+
+## Quality assessment and normalization
+
+To perform quality assessment and normalization we need first to load the
+[edgeR](http://bioconductor.org/packages/edgeR) R/Bioconductor package and
+create a `DGEList' object.
+
+```{r}
+library(edgeR)
+names(se) <- rowRanges(se)$symbol
+dge <- DGEList(counts=assays(se)$counts, genes=mcols(se))
+```
+Now calculate $\log_2$ CPM values of expression and put them as an additional
+assay element to ease their manipulation.
+
+```{r}
+assays(se)$logCPM <- cpm(dge, log=TRUE, prior.count=0.5)
+assays(se)$logCPM[1:5, 1:5]
+```
+### Library sizes
+
+```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S1: Library sizes in increasing order."}
+ord <- order(dge$sample$lib.size/1e6)
+barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
+        xlab="Samples", col=c("blue", "red")[(se$type[ord] == "tumor") + 1])
+legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
+```
