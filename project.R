@@ -33,6 +33,8 @@ dge$samples$type <- types
 ordering <- order(sampledepth)
 sorteddepth <- sampledepth[ordering]
 ordtype <- types[ordering]
+filtdepth<-sorteddepth[sorteddepth>40]
+filttype<-ordtype[sorteddepth>40]
  barplot(sorteddepth, col = c("red","blue")[as.integer(ordtype)], space = 0.1, ylab = "Millions of reads", xlab = "Sample")
 # plot(sorteddepth,ordtype, col=c("red","blue")[as.integer(ordtype)])
  legend("topleft", c("Normal", "Tumor"), fill = c("red", "blue"))
@@ -131,13 +133,15 @@ sampleDendrogram <- dendrapply(sampleDendrogram,
                                  }
                                  x
                                }, batch, outcome)
+dev.off()
+par(cex=0.6)
 plot(sampleDendrogram, main="Hierarchical clustering of samples")
-legend("topright", paste("Batch", sort(unique(batch)), levels(factor(tss))), fill=sort(unique(batch)))
+legend("topright", paste(levels(factor(tss))), fill=sort(unique(batch)))
 
-
+par(cex=0.8)
 plotMDS(dge, labels=outcome, col=batch)
-legend("bottomleft", paste("Batch", sort(unique(batch)), levels(factor(tss))),
-       fill=sort(unique(batch)), inset=0.05)
+legend("bottomleft", paste(levels(factor(tss))),
+       fill=sort(unique(batch)), inset=0.05, horiz=TRUE, cex=0.8)
 
 ## Differential expression
 library(sva)

@@ -8,3 +8,8 @@ css/
 *.md
 *.html
 figure/
+*.aux
+*.log
+*.gz
+*.blg
+*.bbl

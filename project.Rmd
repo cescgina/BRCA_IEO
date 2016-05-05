@@ -45,7 +45,7 @@ colData(se)[1:5, 1:5]
 mcols(colData(se), use.names=TRUE)
 ```
 These metadata consists of two columns of information about the clinical variables.
-One called `labelDescription` contains a succint description of the variable, often
+One called `labelDescription` contains a succinct description of the variable, often
 not more self-explanatory than the variable name itself, and the other called
 'CDEID' corresponds to the so-called `Common Data Element (CDE)` identifier. This
 identifier can be use in https://cdebrowser.nci.nih.gov to search for further
@@ -61,7 +61,7 @@ rowRanges(se)
 
 ## Creation of subsets
 
-We have selected as a criterion for subsetting ....
+We focus on a subset of our data to perform the analysis. To create this subset we use a paired data criterion. That is, we keep only the data corresponding to patient that have samples of tumor and normal type. The following code performs this filtering:
 
 ```{r}
 codesnorm <- colData(se)[colData(se)$type == "normal",]$bcr_patient_barcode
@@ -71,6 +71,7 @@ se <- se[,colData(se)$bcr_patient_barcode %in% commoncodes]
 dim(se)
 ```
 
+As we can see our filtered data-set consists now of 20115 genes for 212 samples, half of which are tumor type and the other half are normal samples.
 
 ## Quality assessment and normalization
 
@@ -92,9 +93,254 @@ assays(se)$logCPM[1:5, 1:5]
 ```
 ### Library sizes
 
+Let's examine the library sizes in terms of total number of sequence read counts
+per sample. Figure S1 below shows library sizes per sample in increasing order.
+
 ```{r libsizes, echo=FALSE, out.width="600px", fig.cap="Figure S1: Library sizes in increasing order."}
 ord <- order(dge$sample$lib.size/1e6)
 barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
-        xlab="Samples", col=c("blue", "red")[(se$type[ord] == "tumor") + 1])
-legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01)
+        xlab="Samples", col=c("blue", "red")[(se$type[ord] == "tumor") + 1], cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01, cex=1.5)
+```
+This figure reveals substantial differences in sequencing depth between samples, although this differences are not quite homogeneously distributed between normal and tumor samples. 
+
+### Distribution of expression levels among samples
+
+Let's look at the distribution of expression values per sample in terms of
+logarithmic CPM units. Due to the large number of samples, we display tumor
+and normal samples separately, and are shown in Figure S2.
+
+```{r distRawExp, echo=FALSE, fig.height=4, fig.width=10, out.width="800px", fig.cap="Figure S2: Non-parametric density distribution of expression profiles per sample."}
+library(geneplotter)
+par(mfrow=c(1, 2))
+multidensity(as.list(as.data.frame(assays(se[, se$type == "tumor"])$logCPM)),
+             xlab="log 2 CPM", legend=NULL, main="Tumor samples", las=1)
+multidensity(as.list(as.data.frame(assays(se[, se$type == "normal"])$logCPM)),
+             xlab="log 2 CPM", ylim=c(0.00,0.15), legend=NULL, main="Normal samples", las=1)
+```
+In the figure we do not appreciate remarkable differences between the distribution of tumor samples and normal samples.
+
+### Distribution of expression levels among genes
+
+Let's calculate now the average expression per gene through all the samples. Figure S3
+shows the distribution of those values across genes.
+
+```{r exprdist, echo=FALSE, out.width="400px", fig.cap="Figure S3: Distribution of average expression level per gene."}
+par(mar = c(6.5, 6.5, 0.5, 0.5), mgp = c(5, 1, 0))
+avgexp <- rowMeans(assays(se)$logCPM)
+hist(avgexp, xlab="log2 CPM", main="", las=1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+abline(v=1, col="red", lwd=2)
+```
+
+### Filtering of lowly-expressed genes
+
+In the light of this plot, we may consider a cutoff of 1 log CPM unit as minimum value
+of expression to select genes being expressed across samples. Using this cutoff we proceed
+to filter out lowly-expressed genes.
+
+```{r}
+mask <- avgexp > 1
+dim(se)
+dim(dge)
+se <- se[mask, ]
+dge <- dge[mask, ]
+dim(se)
+dim(dge)
+```
+
+### Normalization
+
+We calculate now the normalization factors on the filtered expression data set.
+
+```{r}
+dge <- calcNormFactors(dge)
+```
+
+Replace the raw log2 CPM units in the corresponding assay element of the `SummarizedExperiment`
+object, by the normalized ones.
+
+```{r}
+assays(se)$logCPM <- cpm(dge, log=TRUE, prior.count=0.5)
+```
+
+### MA-plots
+
+We examine now the MA-plots of the normalized expression profiles. We look first to
+the tumor samples.
+```{r maPlotsTumor, fig.height=100, fig.width=16, dpi=100, echo=FALSE, fig.cap="Figure S4: MA-plots of the tumor samples."}
+par(mfrow=c(36, 3), mar=c(4, 5, 3, 1))
+setmp <- se[, se$type == "tumor"]
+dgetmp <- dge[, se$type == "tumor"]
+for (i in 1:ncol(setmp)) {
+  A <- rowMeans(assays(setmp)$logCPM)
+  M <- assays(setmp)$logCPM[, i] - A
+  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
+  smoothScatter(A, M, main=samplename, las=1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  abline(h=0, col="blue", lwd=2)
+  lo <- lowess(M ~ A)
+  lines(lo$x, lo$y, col="red", lwd=2)
+}
+```
+We do not observe samples with major expression-level dependent biases. Let's look now to the normal samples.
+
+```{r maPlotsNormal, fig.height=100, fig.width=16, dpi=100, echo=FALSE, fig.cap="Figure S5: MA-plots of the normal samples."}
+par(mfrow=c(36, 3), mar=c(4, 5, 3, 1))
+setmp <- se[, se$type == "normal"]
+dgetmp <- dge[, se$type == "normal"]
+for (i in 1:ncol(setmp)) {
+  A <- rowMeans(assays(setmp)$logCPM)
+  M <- assays(setmp)$logCPM[, i] - A
+  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
+  smoothScatter(A, M, main=samplename, las=1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  abline(h=0, col="blue", lwd=2)
+  lo <- lowess(M ~ A)
+  lines(lo$x, lo$y, col="red", lwd=2)
+}
+```
+
+We do not observe either important expression-level dependent biases among the normal samples.
+
+### Batch identification
+
+We will search now for potential surrogate of batch effect indicators. Given that each sample
+names corresponds to a TCGA barcode (see https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode),
+following the strategy described in http://bioinformatics.mdanderson.org/main/TCGABatchEffects:Overview
+we are going to derive different elements of the TCGA barcode and examine their distribution
+across samples.
+
+```{r}
+tss <- substr(colnames(se), 6, 7)
+table(tss)
+center <- substr(colnames(se), 27, 28)
+table(center)
+plate <- substr(colnames(se), 22, 25)
+table(plate)
+portionanalyte <- substr(colnames(se), 18, 20)
+table(portionanalyte)
+samplevial <- substr(colnames(se), 14, 16)
+table(samplevial)
+```
+
+From this information we can make the following observations:
+
+  * All samples were sequenced at the same center
+
+  * All samples belong to one of two combinations of tissue type and vial, matching the
+    expected tumor and normal distribution, vials 01A and 01B correspond to tumor samples and 11A and 11B correspond to normal samples.
+
+  * Samples were collected across different tissue source sites (TSS).
+  
+We are going to use the TSS as surrogate of batch effect indicator. Considering our outcome
+of interest as molecular changes between sample types, tumor vs. normal, we will examine now
+the cross-classification of this outcome with TSS.
+
+```{r}
+table(data.frame(TYPE=se$type, TSS=tss))
+```
+
+We see that the samples of each type are perfectly balanced over the TSS, so we anticipate that we will not have any batch effect. We will examine how the samples cluster anyway to ensure that we are right.
+
+We examine now how samples group together by hierarchical clustering and multidimensional
+scaling, annotating the outcome of interest and the the surrogate of batch indicator. We
+calculate again log CPM values with a higher prior count to moderate extreme fold-changes
+produced by low counts. The resulting dendrogram is shown in Figure S6.
+
+```{r sampleClustering, fig.height=7, fig.width=14, dpi=100, echo=TRUE, fig.cap="Figure S6: Hierarchical clustering of the samples."}
+logCPM <- cpm(dge, log=TRUE, prior.count=3)
+d <- as.dist(1-cor(logCPM, method="spearman"))
+sampleClustering <- hclust(d)
+batch <- as.integer(factor(tss))
+sampleDendrogram <- as.dendrogram(sampleClustering, hang=0.1)
+names(batch) <- colnames(se)
+outcome <- paste(substr(colnames(se), 9, 12), as.character(se$type), sep="-")
+names(outcome) <- colnames(se)
+sampleDendrogram <- dendrapply(sampleDendrogram,
+                               function(x, batch, labels) {
+                                 if (is.leaf(x)) {
+                                   attr(x, "nodePar") <- list(lab.col=as.vector(batch[attr(x, "label")]))
+                                   attr(x, "label") <- as.vector(labels[attr(x, "label")])
+                                 }
+                                 x
+                               }, batch, outcome)
+
+plot(sampleDendrogram, main="Hierarchical clustering of samples",cex.lab=1.5, cex.axis=1.5, cex.main=1.5)
+legend("topright", paste(levels(factor(tss))), fill=sort(unique(batch)))
+```
+
+We can observe that samples cluster primarily by sample type, tumor or normal. TSS seems to have
+a stronger effect among the normal samples, while it distributes better among the tumor samples.
+We may consider discarding samples leading to an unbalanced distribution of the outcome across batches.
+
+In Figure S7 we show the corresponding MDS plot. Here we see more clearly that the first source of
+variation separates tumor from normal samples. We can also observe that a few normal samples are separated from the rest, in a more clear separation than that shown in the hierchical
+clustering. We may consider discarding these two samples and doing the
+MDS plot again to have a closer look to the differences among the rest of the samples and their
+relationship with TSS.
+
+```{r mds, fig.height=7, fig.width=14, dpi=100, echo=TRUE, fig.cap="Figure S7: Multidimensional scaling plot of the samples."}
+
+plotMDS(dge, labels=outcome, col=batch,cex.lab=1.5, cex.axis=1.5, cex.main=1.5)
+legend("bottomleft", paste(levels(factor(tss))),
+       fill=sort(unique(batch)), inset=0.05, horiz=TRUE, cex=1.3)
+```
+
+## Differential expression
+
+We perform a simple examination of expression changes and their associated p-values
+using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
+
+```{r}
+library(sva)
+mod <- model.matrix(~ se$type, colData(se))
+mod0 <- model.matrix(~ 1, colData(se))
+pv <- f.pvalue(assays(se)$logCPM, mod, mod0)
+sum(p.adjust(pv, method="fdr") < 0.01)
+```
+
+There are `r sum(p.adjust(pv, method="fdr") < 0.01)` genes changing significantly
+their expression at FDR < 1%. In Figure S8 below we show the distribution of the
+resulting p-values.
+
+```{r pdist, echo=FALSE, out.width="400px", fig.cap="Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
+hist(pv, main="", las=1)
+```
+
+Now, let's estimate surrogate variables using the `sva()` function.
+
+```{r}
+sv <- sva(assays(se)$logCPM, mod, mod0)
+sv$n
+```
+
+The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
+assess againt the extent of differential expression this time adjusting for these
+surrogate variables.
+
+```{r}
+modsv <- cbind(mod, sv$sv)
+mod0sv <- cbind(mod0, sv$sv)
+pvsv <- f.pvalue(assays(se)$logCPM, modsv, mod0sv)
+sum(p.adjust(pvsv, method="fdr") < 0.01)
+```
+
+We have increased the number of changing genes to `r sum(p.adjust(pvsv, method="fdr") < 0.01)`.
+Figure S9 shows the resulting distribution of p-values.
+
+```{r psvdist, echo=FALSE, out.width="400px", fig.cap="Figure S9: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
+hist(pvsv, main="", las=1)
+```
+
+## Conclusion
+
+The different QA diagnostics reveal some potentially problematic features in some of the
+samples. We may consider discarding those from further analysis. The main source of variation
+in this data seems to be driven by the tumor and normal condition of the samples. The
+extent of expression changes can be augmented when adjusting for surrogate variables estimated
+with SVA. It would be interesting to observe how that extent changes when discarding potentially
+problematic samples.
+
+## Session information
+
+```{r}
+sessionInfo()
 ```
