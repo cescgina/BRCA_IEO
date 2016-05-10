@@ -243,9 +243,7 @@ the cross-classification of this outcome with TSS.
 table(data.frame(TYPE=se$type, TSS=tss))
 ```
 
-We see that the samples of each type are perfectly balanced over the TSS, so we anticipate that we will not have any batch effect. We will examine how the samples cluster anyway to ensure that we are right.
-
-We examine now how samples group together by hierarchical clustering and multidimensional
+We see that the samples of each type are perfectly balanced over the TSS. We examine now how samples group together by hierarchical clustering and multidimensional
 scaling, annotating the outcome of interest and the the surrogate of batch indicator. We
 calculate again log CPM values with a higher prior count to moderate extreme fold-changes
 produced by low counts. The resulting dendrogram is shown in Figure S6.

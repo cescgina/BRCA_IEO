@@ -252,7 +252,7 @@ metadata(5): experimentData annotation cancerTypeCode
   cancerTypeDescription objectCreationDate
 assays(1): counts
 rownames(20115): 1 2 ... 102724473 103091865
-rowData names(3): symbol txlen txgc
+rowRanges metadata column names(3): symbol txlen txgc
 colnames(1232): TCGA.3C.AAAU.01A.11R.A41B.07
   TCGA.3C.AALI.01A.11R.A41B.07 ... TCGA.GI.A2C8.11A.22R.A16F.07
   TCGA.GI.A2C9.11A.22R.A21T.07
@@ -351,19 +351,19 @@ rowRanges(se)
 
 ```
 GRanges object with 20115 ranges and 3 metadata columns:
-            seqnames               ranges strand |      symbol     txlen
-               <Rle>            <IRanges>  <Rle> | <character> <integer>
-          1    chr19 [58345178, 58362751]      - |        A1BG      3322
-          2    chr12 [ 9067664,  9116229]      - |         A2M      4844
-          9     chr8 [18170477, 18223689]      + |        NAT1      2280
-         10     chr8 [18391245, 18401218]      + |        NAT2      1322
-         12    chr14 [94592058, 94624646]      + |    SERPINA3      3067
-        ...      ...                  ...    ... .         ...       ...
-  100996331    chr15 [20835372, 21877298]      - |       POTEB      1706
-  101340251    chr17 [40027542, 40027645]      - |    SNORD124       104
-  101340252     chr9 [33934296, 33934376]      - |   SNORD121B        81
-  102724473     chrX [49303669, 49319844]      + |      GAGE10       538
-  103091865    chr21 [39313935, 39314962]      + |   BRWD1-IT2      1028
+            seqnames               ranges strand   |      symbol     txlen
+               <Rle>            <IRanges>  <Rle>   | <character> <integer>
+          1    chr19 [58345178, 58362751]      -   |        A1BG      3322
+          2    chr12 [ 9067664,  9116229]      -   |         A2M      4844
+          9     chr8 [18170477, 18223689]      +   |        NAT1      2280
+         10     chr8 [18391245, 18401218]      +   |        NAT2      1322
+         12    chr14 [94592058, 94624646]      +   |    SERPINA3      3067
+        ...      ...                  ...    ... ...         ...       ...
+  100996331    chr15 [20835372, 21877298]      -   |       POTEB      1706
+  101340251    chr17 [40027542, 40027645]      -   |    SNORD124       104
+  101340252     chr9 [33934296, 33934376]      -   |   SNORD121B        81
+  102724473     chrX [49303669, 49319844]      +   |      GAGE10       538
+  103091865    chr21 [39313935, 39314962]      +   |   BRWD1-IT2      1028
                  txgc
             <numeric>
           1 0.5644190
@@ -421,30 +421,12 @@ create a `DGEList' object.
 
 ```r
 library(edgeR)
-```
-
-```
-Loading required package: limma
-```
-
-```
-
-Attaching package: 'limma'
-```
-
-```
-The following object is masked from 'package:BiocGenerics':
-
-    plotMA
-```
-
-```r
 names(se) <- rowRanges(se)$symbol
 dge <- DGEList(counts=assays(se)$counts, genes=mcols(se))
 ```
 
 ```
-Warning in as.data.frame(x, row.names = NULL, optional = optional, ...):
+Warning in as.data.frame.DataFrame(genes, stringsAsFactors = FALSE):
 Arguments in '...' ignored
 ```
 Now calculate $\log_2$ CPM values of expression and put them as an additional
@@ -490,23 +472,6 @@ This figure reveals substantial differences in sequencing depth between samples,
 Let's look at the distribution of expression values per sample in terms of
 logarithmic CPM units. Due to the large number of samples, we display tumor
 and normal samples separately, and are shown in Figure S2.
-
-
-```
-Loading required package: lattice
-```
-
-```
-Loading required package: annotate
-```
-
-```
-Loading required package: AnnotationDbi
-```
-
-```
-Loading required package: XML
-```
 
 <img src="figure/distRawExp-1.png" title="Figure S2: Non-parametric density distribution of expression profiles per sample." alt="Figure S2: Non-parametric density distribution of expression profiles per sample." width="800px" style="display: block; margin: auto;" /><p class="caption">Figure S2: Non-parametric density distribution of expression profiles per sample.</p>
 In the figure we do not appreciate remarkable differences between the distribution of tumor samples and normal samples.
@@ -681,9 +646,7 @@ TYPE     A7 AC BH E2 E9 GI
   tumor   4  4 71 10 15  2
 ```
 
-We see that the samples of each type are perfectly balanced over the TSS, so we anticipate that we will not have any batch effect. We will examine how the samples cluster anyway to ensure that we are right.
-
-We examine now how samples group together by hierarchical clustering and multidimensional
+We see that the samples of each type are perfectly balanced over the TSS. We examine now how samples group together by hierarchical clustering and multidimensional
 scaling, annotating the outcome of interest and the the surrogate of batch indicator. We
 calculate again log CPM values with a higher prior count to moderate extreme fold-changes
 produced by low counts. The resulting dendrogram is shown in Figure S6.
@@ -734,36 +697,6 @@ using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
 
 ```r
 library(sva)
-```
-
-```
-Loading required package: mgcv
-```
-
-```
-Loading required package: nlme
-```
-
-```
-
-Attaching package: 'nlme'
-```
-
-```
-The following object is masked from 'package:IRanges':
-
-    collapse
-```
-
-```
-This is mgcv 1.8-12. For overview type 'help("mgcv-package")'.
-```
-
-```
-Loading required package: genefilter
-```
-
-```r
 mod <- model.matrix(~ se$type, colData(se))
 mod0 <- model.matrix(~ 1, colData(se))
 pv <- f.pvalue(assays(se)$logCPM, mod, mod0)
@@ -846,40 +779,41 @@ sessionInfo()
 ```
 
 ```
-R version 3.3.0 (2016-05-03)
-Platform: x86_64-pc-linux-gnu (64-bit)
-Running under: Ubuntu 14.04.4 LTS
+R version 3.2.3 (2015-12-10)
+Platform: x86_64-redhat-linux-gnu (64-bit)
+Running under: Fedora 23 (Workstation Edition)
 
 locale:
- [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
- [3] LC_TIME=de_DE.UTF-8        LC_COLLATE=en_US.UTF-8    
- [5] LC_MONETARY=de_DE.UTF-8    LC_MESSAGES=en_US.UTF-8   
- [7] LC_PAPER=de_DE.UTF-8       LC_NAME=C                 
+ [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=ca_ES.UTF-8        LC_COLLATE=ca_ES.UTF-8    
+ [5] LC_MONETARY=ca_ES.UTF-8    LC_MESSAGES=ca_ES.UTF-8   
+ [7] LC_PAPER=ca_ES.UTF-8       LC_NAME=C                 
  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-[11] LC_MEASUREMENT=de_DE.UTF-8 LC_IDENTIFICATION=C       
+[11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
 
 attached base packages:
 [1] stats4    parallel  stats     graphics  grDevices utils     datasets 
 [8] methods   base     
 
 other attached packages:
- [1] sva_3.20.0                 genefilter_1.54.0         
- [3] mgcv_1.8-12                nlme_3.1-128              
- [5] geneplotter_1.50.0         annotate_1.50.0           
- [7] XML_3.98-1.4               AnnotationDbi_1.34.0      
- [9] lattice_0.20-33            edgeR_3.14.0              
-[11] limma_3.28.2               SummarizedExperiment_1.2.0
-[13] Biobase_2.32.0             GenomicRanges_1.24.0      
-[15] GenomeInfoDb_1.8.0         IRanges_2.6.0             
-[17] S4Vectors_0.10.0           BiocGenerics_0.18.0       
-[19] knitr_1.13                
+ [1] BiocInstaller_1.20.1       sva_3.18.0                
+ [3] genefilter_1.52.1          mgcv_1.8-12               
+ [5] nlme_3.1-127               geneplotter_1.48.0        
+ [7] annotate_1.48.0            XML_3.98-1.4              
+ [9] AnnotationDbi_1.32.3       lattice_0.20-33           
+[11] markdown_0.7.7             knitr_1.12.3              
+[13] SummarizedExperiment_1.0.2 Biobase_2.30.0            
+[15] GenomicRanges_1.22.4       GenomeInfoDb_1.6.3        
+[17] IRanges_2.4.8              S4Vectors_0.8.11          
+[19] BiocGenerics_0.16.1        edgeR_3.12.1              
+[21] limma_3.26.9              
 
 loaded via a namespace (and not attached):
- [1] XVector_0.12.0     magrittr_1.5       splines_3.3.0     
- [4] zlibbioc_1.18.0    xtable_1.8-2       stringr_1.0.0     
- [7] tools_3.3.0        grid_3.3.0         KernSmooth_2.23-15
-[10] DBI_0.4-1          survival_2.39-3    digest_0.6.9      
-[13] Matrix_1.2-6       RColorBrewer_1.1-2 formatR_1.4       
-[16] codetools_0.2-14   evaluate_0.9       RSQLite_1.0.0     
-[19] stringi_1.0-1     
+ [1] XVector_0.10.0     magrittr_1.5       splines_3.2.3     
+ [4] zlibbioc_1.16.0    xtable_1.8-2       stringr_1.0.0     
+ [7] highr_0.5.1        tools_3.2.3        grid_3.2.3        
+[10] KernSmooth_2.23-15 DBI_0.4            survival_2.39-2   
+[13] digest_0.6.9       Matrix_1.2-6       RColorBrewer_1.1-2
+[16] formatR_1.3        codetools_0.2-14   mime_0.4          
+[19] evaluate_0.9       RSQLite_1.0.0      stringi_1.0-1     
 ```
