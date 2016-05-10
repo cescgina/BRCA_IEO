@@ -21,7 +21,7 @@ cat(dumpcssfile(file.path("css", "ieo.css")))
 
 # Analysis of a TCGA RNA-seq data set on Breast invasive carcinoma
 
-### Ainoha Garcia (@upf.edu), Joan F. Gilabert (joanfrancesc.gilabert01@estudiant.upf.edu) and Leo (@upf.edu)
+### Ainhoa Garcia (ainhoa.garcia03@estudiant.upf.edu), Joan F. Gilabert (joanfrancesc.gilabert01@estudiant.upf.edu) and Leo (leonardopablonicolas.madsen01@estudiant.upf.edu)
 
 ## Introduction
 Breast invasive carcinoma (BRCA), is the most common malignant cancer affecting women and is the second leading cause of cancer death worldwide. This disease has more than 1,300,000 cases and 450,000 death each year around the world[3]. This disease is widely heterogeneous, having a large and diverse set of molecular, histological and clinical behaviors depending of the tumour. The Cancer Genome Atlas (TCGA) has comprehensively profiled this type of cancer in a patient cohort. Here we analyze the expression profiles of those patients, accessible in the form of a raw RNA-seq counts produced by

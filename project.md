@@ -227,7 +227,7 @@ span.toc-section-number::after {
 
 # Analysis of a TCGA RNA-seq data set on Breast invasive carcinoma
 
-### Ainoha Garcia (@upf.edu), Joan F. Gilabert (joanfrancesc.gilabert01@estudiant.upf.edu) and Leo (@upf.edu)
+### Ainhoa Garcia (ainhoa.garcia03@estudiant.upf.edu), Joan F. Gilabert (joanfrancesc.gilabert01@estudiant.upf.edu) and Leo (leonardopablonicolas.madsen01@estudiant.upf.edu)
 
 ## Introduction
 Breast invasive carcinoma (BRCA), is the most common malignant cancer affecting women and is the second leading cause of cancer death worldwide. This disease has more than 1,300,000 cases and 450,000 death each year around the world[3]. This disease is widely heterogeneous, having a large and diverse set of molecular, histological and clinical behaviors depending of the tumour. The Cancer Genome Atlas (TCGA) has comprehensively profiled this type of cancer in a patient cohort. Here we analyze the expression profiles of those patients, accessible in the form of a raw RNA-seq counts produced by
@@ -798,9 +798,9 @@ attached base packages:
 [8] methods   base     
 
 other attached packages:
- [1] sva_3.18.0                 genefilter_1.52.1         
- [3] mgcv_1.8-12                nlme_3.1-127              
- [5] BiocInstaller_1.20.1       geneplotter_1.48.0        
+ [1] BiocInstaller_1.20.1       sva_3.18.0                
+ [3] genefilter_1.52.1          mgcv_1.8-12               
+ [5] nlme_3.1-127               geneplotter_1.48.0        
  [7] annotate_1.48.0            XML_3.98-1.4              
  [9] AnnotationDbi_1.32.3       lattice_0.20-33           
 [11] markdown_0.7.7             knitr_1.12.3              
@@ -811,12 +811,10 @@ other attached packages:
 [21] limma_3.26.9              
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.4        formatR_1.3        RColorBrewer_1.1-2
- [4] highr_0.5.1        XVector_0.10.0     tools_3.2.3       
- [7] zlibbioc_1.16.0    digest_0.6.9       evaluate_0.9      
-[10] RSQLite_1.0.0      Matrix_1.2-6       DBI_0.4           
-[13] stringr_1.0.0      grid_3.2.3         survival_2.39-2   
-[16] rmarkdown_0.9.6    magrittr_1.5       htmltools_0.3.5   
-[19] codetools_0.2-14   splines_3.2.3      mime_0.4          
-[22] xtable_1.8-2       KernSmooth_2.23-15 stringi_1.0-1     
+ [1] XVector_0.10.0     magrittr_1.5       splines_3.2.3     
+ [4] zlibbioc_1.16.0    xtable_1.8-2       stringr_1.0.0     
+ [7] highr_0.5.1        tools_3.2.3        grid_3.2.3        
+[10] DBI_0.4            survival_2.39-2    digest_0.6.9      
+[13] Matrix_1.2-6       RColorBrewer_1.1-2 formatR_1.3       
+[16] evaluate_0.9       RSQLite_1.0.0      stringi_1.0-1     
 ```
