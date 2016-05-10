@@ -2,27 +2,29 @@ library(SummarizedExperiment)
 library(geneplotter)
 library(edgeR)
 
-se <- readRDS(file = "seBRCA.rds")
+se <- readRDS(file = "data/seBRCA.rds")
 
 ## Visualizing data
-mcols(se) # Visualize genes
-metadata(se)$objectCreationDate
-mcols(colData(se), use.names = TRUE) #Phenotypic information
-rowRanges(se) #Feature data
+#mcols(se) # Visualize genes
+#metadata(se)$objectCreationDate
+#mcols(colData(se), use.names = TRUE) #Phenotypic information
+#rowRanges(se) #Feature data
 names(se) <- rowRanges(se)$symbol
 
 ## Subsetting, only samples that we have data for normal and tumor for same patient
 codesnorm <- colData(se)[colData(se)$type == "normal",]$bcr_patient_barcode
 codestum <- colData(se)[colData(se)$type == "tumor",]$bcr_patient_barcode
 commoncodes <- codesnorm[codesnorm %in% codestum]
-se <- se[,colData(se)$bcr_patient_barcode %in% commoncodes]
+codefilter <- colData(se)$bcr_patient_barcode %in% commoncodes
+se <- se[,!codefilter]
+#filtse <- se[,codefilter]
 
 ##
 dge <- DGEList(counts = assays(se)$counts, genes = mcols(se))
 names(dge) #Fields in DGEList
-assays(se)$logCPM <- cpm(dge, log = TRUE, prior.count = 0.5)# Calculate CPM and store it within se
-assays(se)$logCPM[1:5, 1:5]
 logCPM <- cpm(dge, log = TRUE, prior.count = 0.5)
+assays(se)$logCPM <- logCPM# Calculate CPM and store it within se
+# assays(se)$logCPM[1:5, 1:5]
 
 ## Library sizes
 # Library size is the sum of all counts for a sample
@@ -64,39 +66,39 @@ dge <- dge[mask, ]
 
 ##TMM normalization
 dge <- calcNormFactors(dge)
-head(dge$samples$norm.factors)
+# head(dge$samples$norm.factors)
 assays(se)$logCPM <- cpm(dge, log = TRUE, prior.count = 0.5)
 
-## MA plot (ommited for now)
-#par(mfrow = c(9, 3), mar = c(4, 5, 3, 1))
-setmp <- se[, se$type == "normal"]
-dgetmp <- dge[, se$type == "normal"]
-for (i in 1:ncol(setmp)) {
-  # For each sample, draw a scatter plot comparing the average logCPM values for 
-  # each gene versus the difference of the logCPM values for each genes for that
-  # sample and the average values
-  A <- rowMeans(assays(setmp)$logCPM)
-  M <- assays(setmp)$logCPM[, i] - A
-  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
-  smoothScatter(A, M, main = samplename, las = 1)
-  abline(h = 0, col = "blue", lwd = 2)
-  lo <- lowess(M ~ A)
-  lines(lo$x, lo$y, col = "red", lwd = 2)
-}
-
-#par(mfrow=c(22, 3), mar=c(4, 5, 3, 1))
-
-setmp <- se[, se$type == "tumor"]
-dgetmp <- dge[, se$type == "tumor"]
-for (i in 1:ncol(setmp)) {
-  a <- rowmeans(assays(setmp)$logcpm)
-  m <- assays(setmp)$logcpm[, i] - a
-  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
-  smoothscatter(a, m, main = samplename, las = 1)
-  abline(h = 0, col = "blue", lwd = 2)
-  lo <- lowess(m ~ a)
-  lines(lo$x, lo$y, col = "red", lwd = 2)
-}
+### MA plot (ommited for now)
+##par(mfrow = c(9, 3), mar = c(4, 5, 3, 1))
+#setmp <- se[, se$type == "normal"]
+#dgetmp <- dge[, se$type == "normal"]
+#for (i in 1:ncol(setmp)) {
+#  # For each sample, draw a scatter plot comparing the average logCPM values for 
+#  # each gene versus the difference of the logCPM values for each genes for that
+#  # sample and the average values
+#  A <- rowMeans(assays(setmp)$logCPM)
+#  M <- assays(setmp)$logCPM[, i] - A
+#  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
+#  smoothScatter(A, M, main = samplename, las = 1)
+#  abline(h = 0, col = "blue", lwd = 2)
+#  lo <- lowess(M ~ A)
+#  lines(lo$x, lo$y, col = "red", lwd = 2)
+#}
+#
+##par(mfrow=c(22, 3), mar=c(4, 5, 3, 1))
+#
+#setmp <- se[, se$type == "tumor"]
+#dgetmp <- dge[, se$type == "tumor"]
+#for (i in 1:ncol(setmp)) {
+#  a <- rowmeans(assays(setmp)$logcpm)
+#  m <- assays(setmp)$logcpm[, i] - a
+#  samplename <- substr(as.character(setmp$bcr_patient_barcode[i]), 1, 12)
+#  smoothscatter(a, m, main = samplename, las = 1)
+#  abline(h = 0, col = "blue", lwd = 2)
+#  lo <- lowess(m ~ a)
+#  lines(lo$x, lo$y, col = "red", lwd = 2)
+#}
 ## Batch identification
 # https://wiki.nci.nih.gov/display/TCGA/TCGA+barcode
 # tissue source sites (centers, for example 3C -> Columbia University)
@@ -116,14 +118,46 @@ samplevial <- substr(colnames(se), 14, 16)
 table(samplevial)
 table(data.frame(TYPE = se$type, TSS = tss))
 
+batches = c("tss", "plate", "portionanalyte", "samplevial")
 ## Hirearchal clustering
+
+batch_analysis <- function(batch_e){
+  logCPM <- cpm(dge, log=TRUE, prior.count=3)
+  d <- as.dist(1-cor(logCPM, method="spearman"))
+  sampleClustering <- hclust(d)
+  batch <- as.integer(factor(get(batch_e)))
+  sampleDendrogram <- as.dendrogram(sampleClustering, hang=0.1)
+  names(batch) <- colnames(se)
+  outcome <- paste(substr(colnames(se), 9, 12), as.character(se$type), sep="-")
+  names(outcome) <- colnames(se)
+  sampleDendrogram <- dendrapply(sampleDendrogram,
+                                 function(x, batch, labels) {
+                                   if (is.leaf(x)) {
+                                     attr(x, "nodePar") <- list(lab.col=as.vector(batch[attr(x, "label")]))
+                                     attr(x, "label") <- as.vector(labels[attr(x, "label")])
+                                   }
+                                   x
+                                 }, batch, outcome)
+  png(paste(batch_e,"_dend.png",sep=""),height=7, width=14, units="in", res=100)
+  par(cex = 0.6)
+  plot(sampleDendrogram, main = "Hierarchical clustering of samples")
+  legend("topright", paste(levels(factor(get(batch_e)))), fill=sort(unique(batch)))
+  dev.off() 
+  png(paste(batch_e,"_mds.png",sep=""),height=7, width=14, units="in", res=100)
+  par(cex = 0.8)
+  plotMDS(dge, labels=outcome, col=batch)
+  legend("bottomleft", paste(levels(factor(get(batch_e)))),
+         fill=sort(unique(batch)), inset=0.05, horiz=TRUE, cex=0.8)
+  dev.off()
+}
+
 logCPM <- cpm(dge, log=TRUE, prior.count=3)
 d <- as.dist(1-cor(logCPM, method="spearman"))
 sampleClustering <- hclust(d)
 batch <- as.integer(factor(tss))
 sampleDendrogram <- as.dendrogram(sampleClustering, hang=0.1)
 names(batch) <- colnames(se)
-outcome <- paste(substr(colnames(se), 9, 12), as.character(se$type), sep="-")
+outcome <- substr(se$type,1,2)
 names(outcome) <- colnames(se)
 sampleDendrogram <- dendrapply(sampleDendrogram,
                                function(x, batch, labels) {
@@ -134,15 +168,17 @@ sampleDendrogram <- dendrapply(sampleDendrogram,
                                  x
                                }, batch, outcome)
 dev.off()
-par(cex=0.6)
-plot(sampleDendrogram, main="Hierarchical clustering of samples")
+png("dendogram.png", height=10, width=10, units="in", res=100)
+par(cex = 0.6)
+plot(sampleDendrogram, main = "Hierarchical clustering of samples")
 legend("topright", paste(levels(factor(tss))), fill=sort(unique(batch)))
-
-par(cex=0.8)
+dev.off()
+png("mds.png", height=10, width=10, units="in", res=100)
+par(cex = 0.8)
 plotMDS(dge, labels=outcome, col=batch)
 legend("bottomleft", paste(levels(factor(tss))),
        fill=sort(unique(batch)), inset=0.05, horiz=TRUE, cex=0.8)
-
+dev.off()
 ## Differential expression
 library(sva)
 mod <- model.matrix(~ se$type, colData(se))

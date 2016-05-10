@@ -21,9 +21,11 @@ cat(dumpcssfile(file.path("css", "ieo.css")))
 
 # Analysis of a TCGA RNA-seq data set on Breast invasive carcinoma
 
-### Ainoha Garcia (@upf.edu), Joan F. Gilabert () and Leo ()
+### Ainoha Garcia (@upf.edu), Joan F. Gilabert (joanfrancesc.gilabert01@estudiant.upf.edu) and Leo (@upf.edu)
 
 ## Introduction
+Breast invasive carcinoma (BRCA), is the most common malignant cancer affecting women and is the second leading cause of cancer death worldwide. This disease has more than 1,300,000 cases and 450,000 death each year around the world[3]. This disease is widely heterogeneous, having a large and diverse set of molecular, histological and clinical behaviors depending of the tumour. The Cancer Genome Atlas (TCGA) has comprehensively profiled this type of cancer in a patient cohort. Here we analyze the expression profiles of those patients, accessible in the form of a raw RNA-seq counts produced by
+[Rahman et al. (2015)](http://bioinformatics.oxfordjournals.org/content/31/22/3666.short) using a pipeline based on the R/Bioconductor software package [Rsubread](http://bioconductor.org/packages/Rsubread).
 
 ## Data import
 
@@ -32,7 +34,7 @@ We start importing the raw table of counts.
 ```{r}
 library(SummarizedExperiment)
 
-se <- readRDS(file.path("seBRCA.rds"))
+se <- readRDS(file.path("data/seBRCA.rds"))
 se
 ```
 
@@ -58,10 +60,11 @@ Now, explore the row (feature) data.
 rowRanges(se)
 ```
 
+This feature data provides information about the genes, their symbols, location in the genome, length and gc content.
 
 ## Creation of subsets
 
-We focus on a subset of our data to perform the analysis. To create this subset we use a paired data criterion. That is, we keep only the data corresponding to patient that have samples of tumor and normal type. The following code performs this filtering:
+We focus on a subset of our data to perform the analysis. To create this subset we use a paired data criterion. That is, we keep only the data corresponding to patient that have samples of tumor and normal type. We use this criterion in order the minimize the genomic variability and supposedly reduce the probability of having confounding factors in our data. The following code performs this filtering:
 
 ```{r}
 codesnorm <- colData(se)[colData(se)$type == "normal",]$bcr_patient_barcode
@@ -69,6 +72,7 @@ codestum <- colData(se)[colData(se)$type == "tumor",]$bcr_patient_barcode
 commoncodes <- codesnorm[codesnorm %in% codestum]
 se <- se[,colData(se)$bcr_patient_barcode %in% commoncodes]
 dim(se)
+table(se$type)
 ```
 
 As we can see our filtered data-set consists now of 20115 genes for 212 samples, half of which are tumor type and the other half are normal samples.
@@ -102,7 +106,8 @@ barplot(dge$sample$lib.size[ord]/1e6, las=1, ylab="Millions of reads",
         xlab="Samples", col=c("blue", "red")[(se$type[ord] == "tumor") + 1], cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
 legend("topleft", c("tumor", "normal"), fill=c("red", "blue"), inset=0.01, cex=1.5)
 ```
-This figure reveals substantial differences in sequencing depth between samples, although this differences are not quite homogeneously distributed between normal and tumor samples. 
+
+This figure reveals substantial differences in sequencing depth between samples, although this differences are quite homogeneously distributed between normal and tumor samples. We might filter the samples that have a library size with an extreme value, although that would disrupt our paired subset, so we decided to leave all samples. 
 
 ### Distribution of expression levels among samples
 
@@ -198,7 +203,7 @@ for (i in 1:ncol(setmp)) {
 }
 ```
 
-We do not observe either important expression-level dependent biases among the normal samples.
+Again, we do not observe either important expression-level dependent biases among the normal samples.
 
 ### Batch identification
 
@@ -267,15 +272,9 @@ plot(sampleDendrogram, main="Hierarchical clustering of samples",cex.lab=1.5, ce
 legend("topright", paste(levels(factor(tss))), fill=sort(unique(batch)))
 ```
 
-We can observe that samples cluster primarily by sample type, tumor or normal. TSS seems to have
-a stronger effect among the normal samples, while it distributes better among the tumor samples.
-We may consider discarding samples leading to an unbalanced distribution of the outcome across batches.
+We can observe that samples cluster primarily by sample type, tumor or normal. TSS seems to have a stronger effect among the normal samples, while it distributes better among the tumor samples. We may consider discarding samples that do not seem to cluster as well across batches.
 
-In Figure S7 we show the corresponding MDS plot. Here we see more clearly that the first source of
-variation separates tumor from normal samples. We can also observe that a few normal samples are separated from the rest, in a more clear separation than that shown in the hierchical
-clustering. We may consider discarding these two samples and doing the
-MDS plot again to have a closer look to the differences among the rest of the samples and their
-relationship with TSS.
+In Figure S7 we show the corresponding MDS plot. Here we see more clearly that the first source of variation separates tumor from normal samples. We can also observe that a few normal samples are separated from the rest, in a more clear separation than that shown in the hierarchical clustering. We may consider discarding those few samples and doing the MDS plot again to have a closer look to the differences among the rest of the samples and their relationship with TSS. In both figures S6 and S7 there a few samples that seem to deviate, but it is not a major deviation, so we decide to not exclude and continue to explore our data. Figures S6 and S7 are created by using TSS as surrogate variable, but we have done the same using the plate, analyte and vial as surrogate variables one at a time and have found similar results, since those plots do not contribute with relevant insight, they are omitted from this report.
 
 ```{r mds, fig.height=7, fig.width=14, dpi=100, echo=TRUE, fig.cap="Figure S7: Multidimensional scaling plot of the samples."}
 
@@ -302,10 +301,16 @@ their expression at FDR < 1%. In Figure S8 below we show the distribution of the
 resulting p-values.
 
 ```{r pdist, echo=FALSE, out.width="400px", fig.cap="Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples."}
-hist(pv, main="", las=1)
+hist(pv, main="", las=1, xlab="p-values", cex.lab=1.3, cex.axis=1.1, cex.main=1.3)
+```
+We see how a vast majority of our genes have a low p-value, to check the distribution of the rest of genes we will plot the histogram of the not significantly expressed genes, this histogram should correspond more or less to a uniform distribution.
+
+```{r pdistzoom, echo=FALSE, out.width="400px", fig.cap="Figure S9: Distribution of p-values which are not significant."}
+par(mar = c(4, 8, 3, 1))
+hist(pv[pv>0.05], main="", las=1, xlab="p-values", cex.lab=1.3, cex.axis=1.1, cex.main=1.3)
 ```
 
-Now, let's estimate surrogate variables using the `sva()` function.
+The p-values are not perfectly uniform, although it does not seem too bad. Now, let's estimate surrogate variables using the `sva()` function.
 
 ```{r}
 sv <- sva(assays(se)$logCPM, mod, mod0)
@@ -313,7 +318,7 @@ sv$n
 ```
 
 The SVA algorithm has found `r sv$n` surrogate variables. Let's use them to
-assess againt the extent of differential expression this time adjusting for these
+assess again the extent of differential expression this time adjusting for these
 surrogate variables.
 
 ```{r}
@@ -324,20 +329,27 @@ sum(p.adjust(pvsv, method="fdr") < 0.01)
 ```
 
 We have increased the number of changing genes to `r sum(p.adjust(pvsv, method="fdr") < 0.01)`.
-Figure S9 shows the resulting distribution of p-values.
+Figure S10 shows the resulting distribution of p-values.
 
-```{r psvdist, echo=FALSE, out.width="400px", fig.cap="Figure S9: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
-hist(pvsv, main="", las=1)
+```{r psvdist, echo=FALSE, out.width="400px", fig.cap="Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA."}
+hist(pvsv, main="", las=1, xlab="p-values after adjusting", cex.lab=1.3, cex.axis=1.1, cex.main=1.3)
 ```
+
+Once again, we see how a vast majority of our genes have a low p-value, to check the distribution of the rest of genes we will plot the histogram of the not significantly expressed genes.
+
+```{r psvdistzoom, echo=FALSE, out.width="400px", fig.cap="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA."}
+hist(pvsv[pvsv>0.05], main="", xlab="p-values after adjusting", las=1, cex.lab=1.3, cex.axis=1.1, cex.main=1.3)
+```
+
+The p-values are not perfectly uniform, but the distribution seem a bit more uniform after adjusting.
 
 ## Conclusion
 
-The different QA diagnostics reveal some potentially problematic features in some of the
-samples. We may consider discarding those from further analysis. The main source of variation
-in this data seems to be driven by the tumor and normal condition of the samples. The
-extent of expression changes can be augmented when adjusting for surrogate variables estimated
-with SVA. It would be interesting to observe how that extent changes when discarding potentially
-problematic samples.
+The different QA diagnostics reveal some potentially problematic features in some of the samples. Some of this feature may be the difference in library size or variability that is not due to the sample type, as indicated by the MDS plot. However, these issues do not seem overly important, so we have decided to proceed with the analysis without eliminating any more samples after sub-setting, although we may consider discarding them in the future. 
+
+The main source of variation in this data seems to be driven by the tumor and normal condition of the samples. We have found no batch effect using the information from the TGCA barcode. 
+
+The extent of expression changes can be augmented when adjusting for surrogate variables estimated with SVA. Furthermore, the p-values that are not significant are distributed reasonably uniformly, and the distribution seems to improve after the SVA. Additionally, it would be interesting to observe how that extent changes when discarding potentially problematic samples.
 
 ## Session information
 
