@@ -194,3 +194,91 @@ mod0sv <- cbind(mod0, sv$sv)
 pvsv <- f.pvalue(assays(se)$logCPM, modsv, mod0sv)
 sum(p.adjust(pvsv, method="fdr") < 0.01)
 hist(pvsv,main="", las=1)
+
+### Linear regression DE
+adjust_model <- function(model, genesmd, se){
+  fit <- lmFit(assays(se)$logCPM, design)
+  fit <- eBayes(fit)
+  FDRcutoff <- 0.1
+  res <- decideTests(fit, p.value = FDRcutoff)
+  summary(res)
+  # Adding choromosome information
+  genesmd <- data.frame(chr = as.character(seqnames(rowRanges(se))), symbol = names(rowRanges(se)), stringsAsFactors = FALSE)
+  fit$genes <- genesmd
+  tt <- topTable(fit, coef = 2, n = Inf)
+  return(c(fit, tt))
+}
+design <- model.matrix(~ type, data = colData(se))
+# First fit
+fit <- lmFit(assays(se)$logCPM, design)
+fit <- eBayes(fit)
+FDRcutoff <- 0.1
+res <- decideTests(fit, p.value = FDRcutoff)
+summary(res)
+# Adding choromosome information
+genesmd <- data.frame(chr = as.character(seqnames(rowRanges(se))), symbol = names(rowRanges(se)), stringsAsFactors = FALSE)
+fit$genes <- genesmd
+tt <- topTable(fit, coef = 2, n = Inf)
+head(tt)
+# Show chromosome distribution of DE genes
+sort(table(tt$chr[tt$adj.P.Val < FDRcutoff]), decreasing = TRUE)
+# 
+par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual, main = "", pch = ".", cex = 3)
+abline(0, 1, lwd = 2)
+# Second fit
+v <- voom(dge, design, plot=TRUE)
+mod0 <- model.matrix(~concentration, colData(se))
+sv <- sva(v$E, mod = design, mod0 = mod0)
+design <- cbind(design, sv$sv)
+colnames(design) <- c(colnames(design)[1:2], paste0("SV", 1:sv$n))
+fit2 <- lmFit(v, design)
+fit2 <- eBayes(fit2)
+res2 <- decideTests(fit2, p.value = FDRcutoff)
+summary(res2)
+fit2$genes <- genesmd
+tt2 <- topTable(fit2, coef = 2, n = Inf)
+head(tt2)
+DEgenes2 <- rownames(tt2)[tt2$adj.P.Val < FDRcutoff]
+par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+hist(tt2$P.Value, xlab = "Raw P-values", main = "", las = 1)
+qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual, main = "", pch = ".", cex = 3)
+abline(0, 1, lwd = 2)
+dev.off()
+volcanoplot(fit2, coef = 2, highlight = 7, fit$genes$symbol, main = "Model 1", las = 1)
+top7 <- order(fit2$lods[, 2], decreasing = TRUE)[1:7]
+limma::plotMA(fit2, coef = 2, status = rownames(fit2$lods) %in% DEgenes2, legend = FALSE,
+       main = "Model 1", hl.pch = 46, hl.cex = 4, bg.pch = 46, bg.cex = 3, las = 1)
+text(fit2$Amean[top7], fit2$coef[top7, 2], fit2$genes$symbol[top7], cex = 0.5, pos = 4)
+#Identify potential source of bias
+n <- 100
+phenot <- as.data.frame(colData(se)[1, 1:n])
+rownames(phenot) <- NULL
+phenot
+# Ages
+ages <- colData(se)[,c("age_at_diagnosis")]
+ages <- as.numeric(levels(ages))[ages]
+hist(ages)
+# Tumor type
+types <- colData(se)[,"histological_type"]
+types <- na.omit(types)
+types <- as.character(types)
+table(types)
+mat <- as.data.frame(table(types))
+rownames(mat)<- c("IDC", "ILC", "MdC", "MH", "MuC","Other")
+barplot(mat$Freq, names.arg = rownames(mat))
+
+## Model with known covariates
+model_design <- model.matrix( ~ type + age_at_diagnosis, data = colData(se))
+fit4 <- lmFit(assays(se)$logCPM, model_design)
+fit4 <- eBayes(fit)
+FDRcutoff <- 0.1
+res4 <- decideTests(fit, p.value = FDRcutoff)
+summary(res4)
+# Adding choromosome information
+fit4$genes <- genesmd
+tt4 <- topTable(fit4, coef = 2, n = Inf)
+
+### Functional annotation
+library(org.Hs.eg.db)

@@ -6,7 +6,9 @@ projectTemplate.zip
 *.aux
 cache/
 data/
-*.log
-*.gz
-*.blg
-*.bbl
+report/old/
+report/template/
+report/*.log
+report/*.gz
+report/*.blg
+report/*.bbl
