@@ -1,4 +1,4 @@
-```{r setup, cache=FALSE, echo=FALSE, results='asis'}
+```{r setup, cache=FALSE, echo=FALSE, results='asis', message=FALSE}
 dumpcssfile <- function(fname) {
   paste(c('<style type="text/css">', readLines(fname), '</style>\n'),
         collapse="\n")
@@ -7,6 +7,8 @@ dumpcssfile <- function(fname) {
 opts_chunk$set(cache=TRUE,
                autodep=TRUE,
                fig.align="center",
+               message = FALSE,
+               warning = FALSE,
                comment="")
 
 knit_hooks$set(error=function(x, options) stop(x),
@@ -336,10 +338,107 @@ hist(pvsv, main="", las=1, xlab="p-values after adjusting", cex.lab=1.3, cex.axi
 Once again, we see how a vast majority of our genes have a low p-value, to check the distribution of the rest of genes we will plot the histogram of the not significantly expressed genes.
 
 ```{r psvdistzoom, echo=FALSE, out.width="400px", fig.cap="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA."}
-hist(pvsv[pvsv>0.05], main="", xlab="p-values after adjusting", las=1, cex.lab=1.3, cex.axis=1.1, cex.main=1.3)
+hist(pvsv[pvsv > 0.05], main = "", xlab = "p-values after adjusting", las = 1, cex.lab = 1.3, cex.axis = 1.1, cex.main = 1.3)
 ```
 
-The p-values are not perfectly uniform, but the distribution seem a bit more uniform after adjusting.
+The p-values are not perfectly uniform, but the distribution seems a bit more uniform after adjusting.
+
+Next, we perform a differential expression analysis using a linear model with the package [limma](http://bioconductor.org/packages/limma). We start with a simple model considering only the type of sample as our variable of interest, and follow the typical limma workflow:
+
+1. Build design matrix
+
+```{r}
+library(limma)
+design <- model.matrix(~ type, data = colData(se))
+```
+
+2. Calculate observational-level weights, the mean variance trend can be seen in figure :
+
+```{r}
+v <- voom(dge, design, plot = FALSE)
+```
+```{r voom, echo=FALSE, out.width="400px", fig.cap="Figure S12: Mean variance trend for our logCPM values."}
+par(cex = 2, mar = c(4, 5, 2, 2))
+v <- voom(dge, design, plot = TRUE)
+```
+
+3. Fit linear model:
+```{r}
+fit <- lmFit(v, design)
+```
+4. Calculate moderated t -statistics: 
+```{r}
+fit <- eBayes(fit)
+```
+5. Examine the amount of differential expression at 10% FDR:
+```{r}
+FDRcutoff <- 0.1
+res <- decideTests(fit, p.value = FDRcutoff)
+summary(res)
+```
+6. Output results:
+```{r}
+tt <- topTable(fit, coef = 2, n = Inf)
+```
+
+To evaluate the model we will plot the distribution of p values and the qqplot:
+```{r diagnostic1, echo=FALSE, out.width="500px", fig.cap="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot."}
+pvalfreq <- hist(tt$P.Value, plot = FALSE)
+par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
+#hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1, log = TRUE)
+plot(pvalfreq$mids, log10(pvalfreq$counts), type = 'h', lwd = 4, lend = 2, ylim = c(0,4),
+     xlab = "Raw P-values", ylab = "Log10 frequencies", main = "", las = 1, cex = 3)
+qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual, main = "", pch = ".", cex = 3)
+abline(0, 7.5, lwd = 2)
+```
+As we can see....
+
+Next, we create a volcano plot with the results of the DE analysis
+```{r volcano1, echo=FALSE, out.width="400px", fig.cap="Figure S14: Volcano plot of the results of the DE analysis."}
+par(mar = c(4, 5, 2, 2))
+volcanoplot(fit, coef = 2, highlight = 7, fit$genes$symbol, main = "Model 1", las = 1,
+            cex.lab = 1.8, cex.axis = 1.8)
+```
+
+....
+
+
+Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological process
+
+```{r}
+library(GOstats)
+library(org.Hs.eg.db)
+library(xtable)
+DEgenes2 <- rownames(tt)[tt$adj.P.Val < FDRcutoff]
+geneUniverse <- select(org.Hs.eg.db, keys = rownames(se), columns = "ENTREZID", keytype = "SYMBOL")
+geneUniverse <- geneUniverse$ENTREZID
+DEgenes <- select(org.Hs.eg.db, keys = DEgenes2, columns = "ENTREZID", keytype = "SYMBOL")
+DEgenes <- DEgenes$ENTREZID
+params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse,
+              annotation = "org.Hs.eg.db", ontology = "BP",
+              pvalueCutoff = 0.05, testDirection = "over")
+conditional(params) <- TRUE
+hgOverCond <- hyperGTest(params)
+htmlReport(hgOverCond, file = "gotests.html")
+goresults <- summary(hgOverCond)
+```
+
+Setup of the analysis with conditional...
+
+Then filtering the results....
+```{r}
+goresults <- goresults[goresults$Size >= 5 & goresults$Count >= 5, ]
+goresults <- goresults[order(goresults$OddsRatio, decreasing = TRUE), ]
+geneIDs <- geneIdsByCategory(hgOverCond)[goresults$GOBPID]
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+goresults <- cbind(goresults, Genes = geneSYMs)
+rownames(goresults) <- 1:nrow(goresults)
+xtab <- xtable(goresults, align = "l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+print(xtab, file = "goresults.html", type = "html")
+```
+
+The results have been exported to html files, which are much easier to visualize.
 
 ## Conclusion
 

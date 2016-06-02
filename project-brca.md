@@ -252,7 +252,7 @@ metadata(5): experimentData annotation cancerTypeCode
   cancerTypeDescription objectCreationDate
 assays(1): counts
 rownames(20115): 1 2 ... 102724473 103091865
-rowRanges metadata column names(3): symbol txlen txgc
+rowData names(3): symbol txlen txgc
 colnames(1232): TCGA.3C.AAAU.01A.11R.A41B.07
   TCGA.3C.AALI.01A.11R.A41B.07 ... TCGA.GI.A2C8.11A.22R.A16F.07
   TCGA.GI.A2C9.11A.22R.A21T.07
@@ -351,19 +351,19 @@ rowRanges(se)
 
 ```
 GRanges object with 20115 ranges and 3 metadata columns:
-            seqnames               ranges strand   |      symbol     txlen
-               <Rle>            <IRanges>  <Rle>   | <character> <integer>
-          1    chr19 [58345178, 58362751]      -   |        A1BG      3322
-          2    chr12 [ 9067664,  9116229]      -   |         A2M      4844
-          9     chr8 [18170477, 18223689]      +   |        NAT1      2280
-         10     chr8 [18391245, 18401218]      +   |        NAT2      1322
-         12    chr14 [94592058, 94624646]      +   |    SERPINA3      3067
-        ...      ...                  ...    ... ...         ...       ...
-  100996331    chr15 [20835372, 21877298]      -   |       POTEB      1706
-  101340251    chr17 [40027542, 40027645]      -   |    SNORD124       104
-  101340252     chr9 [33934296, 33934376]      -   |   SNORD121B        81
-  102724473     chrX [49303669, 49319844]      +   |      GAGE10       538
-  103091865    chr21 [39313935, 39314962]      +   |   BRWD1-IT2      1028
+            seqnames               ranges strand |      symbol     txlen
+               <Rle>            <IRanges>  <Rle> | <character> <integer>
+          1    chr19 [58345178, 58362751]      - |        A1BG      3322
+          2    chr12 [ 9067664,  9116229]      - |         A2M      4844
+          9     chr8 [18170477, 18223689]      + |        NAT1      2280
+         10     chr8 [18391245, 18401218]      + |        NAT2      1322
+         12    chr14 [94592058, 94624646]      + |    SERPINA3      3067
+        ...      ...                  ...    ... .         ...       ...
+  100996331    chr15 [20835372, 21877298]      - |       POTEB      1706
+  101340251    chr17 [40027542, 40027645]      - |    SNORD124       104
+  101340252     chr9 [33934296, 33934376]      - |   SNORD121B        81
+  102724473     chrX [49303669, 49319844]      + |      GAGE10       538
+  103091865    chr21 [39313935, 39314962]      + |   BRWD1-IT2      1028
                  txgc
             <numeric>
           1 0.5644190
@@ -423,11 +423,6 @@ create a `DGEList' object.
 library(edgeR)
 names(se) <- rowRanges(se)$symbol
 dge <- DGEList(counts=assays(se)$counts, genes=mcols(se))
-```
-
-```
-Warning in as.data.frame.DataFrame(genes, stringsAsFactors = FALSE):
-Arguments in '...' ignored
 ```
 Now calculate $\log_2$ CPM values of expression and put them as an additional
 assay element to ease their manipulation.
@@ -761,7 +756,104 @@ Once again, we see how a vast majority of our genes have a low p-value, to check
 
 <img src="figure/psvdistzoom-1.png" title="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA." alt="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA.</p>
 
-The p-values are not perfectly uniform, but the distribution seem a bit more uniform after adjusting.
+The p-values are not perfectly uniform, but the distribution seems a bit more uniform after adjusting.
+
+Next, we perform a differential expression analysis using a linear model with the package [limma](http://bioconductor.org/packages/limma). We start with a simple model considering only the type of sample as our variable of interest, and follow the typical limma workflow:
+
+1. Build design matrix
+
+
+```r
+library(limma)
+design <- model.matrix(~ type, data = colData(se))
+```
+
+2. Calculate observational-level weights, the mean variance trend can be seen in figure :
+
+
+```r
+v <- voom(dge, design, plot = FALSE)
+```
+<img src="figure/voom-1.png" title="Figure S12: Mean variance trend for our logCPM values." alt="Figure S12: Mean variance trend for our logCPM values." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S12: Mean variance trend for our logCPM values.</p>
+
+3. Fit linear model:
+
+```r
+fit <- lmFit(v, design)
+```
+4. Calculate moderated t -statistics: 
+
+```r
+fit <- eBayes(fit)
+```
+5. Examine the amount of differential expression at 10% FDR:
+
+```r
+FDRcutoff <- 0.1
+res <- decideTests(fit, p.value = FDRcutoff)
+summary(res)
+```
+
+```
+   (Intercept) typetumor
+-1          10      4498
+0           30      2292
+1        11815      5065
+```
+6. Output results:
+
+```r
+tt <- topTable(fit, coef = 2, n = Inf)
+```
+
+To evaluate the model we will plot the distribution of p values and the qqplot:
+<img src="figure/diagnostic1-1.png" title="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." alt="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot.</p>
+As we can see....
+
+Next, we create a volcano plot with the results of the DE analysis
+<img src="figure/volcano1-1.png" title="Figure S14: Volcano plot of the results of the DE analysis." alt="Figure S14: Volcano plot of the results of the DE analysis." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S14: Volcano plot of the results of the DE analysis.</p>
+
+....
+
+
+Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological process
+
+
+```r
+library(GOstats)
+library(org.Hs.eg.db)
+library(xtable)
+DEgenes2 <- rownames(tt)[tt$adj.P.Val < FDRcutoff]
+geneUniverse <- select(org.Hs.eg.db, keys = rownames(se), columns = "ENTREZID", keytype = "SYMBOL")
+geneUniverse <- geneUniverse$ENTREZID
+DEgenes <- select(org.Hs.eg.db, keys = DEgenes2, columns = "ENTREZID", keytype = "SYMBOL")
+DEgenes <- DEgenes$ENTREZID
+params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse,
+              annotation = "org.Hs.eg.db", ontology = "BP",
+              pvalueCutoff = 0.05, testDirection = "over")
+conditional(params) <- TRUE
+hgOverCond <- hyperGTest(params)
+htmlReport(hgOverCond, file = "gotests.html")
+goresults <- summary(hgOverCond)
+```
+
+Setup of the analysis with conditional...
+
+Then filtering the results....
+
+```r
+goresults <- goresults[goresults$Size >= 5 & goresults$Count >= 5, ]
+goresults <- goresults[order(goresults$OddsRatio, decreasing = TRUE), ]
+geneIDs <- geneIdsByCategory(hgOverCond)[goresults$GOBPID]
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+goresults <- cbind(goresults, Genes = geneSYMs)
+rownames(goresults) <- 1:nrow(goresults)
+xtab <- xtable(goresults, align = "l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+print(xtab, file = "goresults.html", type = "html")
+```
+
+The results have been exported to html files, which are much easier to visualize.
 
 ## Conclusion
 
@@ -779,7 +871,7 @@ sessionInfo()
 ```
 
 ```
-R version 3.2.3 (2015-12-10)
+R version 3.3.0 (2016-05-03)
 Platform: x86_64-redhat-linux-gnu (64-bit)
 Running under: Fedora 23 (Workstation Edition)
 
@@ -796,24 +888,28 @@ attached base packages:
 [8] methods   base     
 
 other attached packages:
- [1] BiocInstaller_1.20.1       sva_3.18.0                
- [3] genefilter_1.52.1          mgcv_1.8-12               
- [5] nlme_3.1-127               geneplotter_1.48.0        
- [7] annotate_1.48.0            XML_3.98-1.4              
- [9] AnnotationDbi_1.32.3       lattice_0.20-33           
-[11] markdown_0.7.7             knitr_1.12.3              
-[13] SummarizedExperiment_1.0.2 Biobase_2.30.0            
-[15] GenomicRanges_1.22.4       GenomeInfoDb_1.6.3        
-[17] IRanges_2.4.8              S4Vectors_0.8.11          
-[19] BiocGenerics_0.16.1        edgeR_3.12.1              
-[21] limma_3.26.9              
+ [1] BiocInstaller_1.22.2       markdown_0.7.7            
+ [3] knitr_1.13                 GO.db_3.3.0               
+ [5] xtable_1.8-2               org.Hs.eg.db_3.3.0        
+ [7] sva_3.20.0                 genefilter_1.54.2         
+ [9] mgcv_1.8-12                nlme_3.1-128              
+[11] geneplotter_1.50.0         annotate_1.50.0           
+[13] XML_3.98-1.4               lattice_0.20-33           
+[15] SummarizedExperiment_1.2.2 GenomicRanges_1.24.0      
+[17] GenomeInfoDb_1.8.1         GOstats_2.38.0            
+[19] graph_1.50.0               Category_2.38.0           
+[21] Matrix_1.2-6               AnnotationDbi_1.34.3      
+[23] IRanges_2.6.0              S4Vectors_0.10.1          
+[25] Biobase_2.32.0             BiocGenerics_0.18.0       
+[27] edgeR_3.14.0               limma_3.28.5              
 
 loaded via a namespace (and not attached):
- [1] XVector_0.10.0     magrittr_1.5       splines_3.2.3     
- [4] zlibbioc_1.16.0    xtable_1.8-2       stringr_1.0.0     
- [7] highr_0.5.1        tools_3.2.3        grid_3.2.3        
-[10] KernSmooth_2.23-15 DBI_0.4            survival_2.39-2   
-[13] digest_0.6.9       Matrix_1.2-6       RColorBrewer_1.1-2
-[16] formatR_1.3        codetools_0.2-14   mime_0.4          
-[19] evaluate_0.9       RSQLite_1.0.0      stringi_1.0-1     
+ [1] formatR_1.4            highr_0.6              RColorBrewer_1.1-2    
+ [4] XVector_0.12.0         tools_3.3.0            zlibbioc_1.18.0       
+ [7] digest_0.6.9           RSQLite_1.0.0          evaluate_0.9          
+[10] DBI_0.4-1              stringr_1.0.0          grid_3.3.0            
+[13] GSEABase_1.34.0        RBGL_1.48.1            survival_2.39-4       
+[16] magrittr_1.5           codetools_0.2-14       splines_3.3.0         
+[19] mime_0.4               AnnotationForge_1.14.2 KernSmooth_2.23-15    
+[22] stringi_1.1.1         
 ```

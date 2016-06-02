@@ -226,13 +226,16 @@ head(tt)
 # Show chromosome distribution of DE genes
 sort(table(tt$chr[tt$adj.P.Val < FDRcutoff]), decreasing = TRUE)
 # 
+pvalfreq <- hist(tt$P.Value, plot=FALSE)
 par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
-hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1)
+#hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1, log = TRUE)
+plot(pvalfreq$mids, log10(pvalfreq$counts), type='h', lwd=4, lend=2, ylim=c(0,4),
+     xlab = "Raw P-values", ylab = "Log10 frequencies", main="", las=1)
 qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual, main = "", pch = ".", cex = 3)
-abline(0, 1, lwd = 2)
+abline(0, 7.5, lwd = 2)
 # Second fit
 v <- voom(dge, design, plot=TRUE)
-mod0 <- model.matrix(~concentration, colData(se))
+mod0 <- model.matrix(~ 1, data = colData(se))
 sv <- sva(v$E, mod = design, mod0 = mod0)
 design <- cbind(design, sv$sv)
 colnames(design) <- c(colnames(design)[1:2], paste0("SV", 1:sv$n))
@@ -244,11 +247,15 @@ fit2$genes <- genesmd
 tt2 <- topTable(fit2, coef = 2, n = Inf)
 head(tt2)
 DEgenes2 <- rownames(tt2)[tt2$adj.P.Val < FDRcutoff]
+pvalfreq <- hist(tt2$P.Value, plot=FALSE)
 par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
-hist(tt2$P.Value, xlab = "Raw P-values", main = "", las = 1)
+#hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1, log = TRUE)
+plot(pvalfreq$mids, log10(pvalfreq$counts), type='h', lwd=4, lend=2, ylim=c(0,4),
+     xlab = "Raw P-values", ylab = "Log10 frequencies", main="", las=1)
 qqt(fit2$t[, 2], df = fit2$df.prior + fit2$df.residual, main = "", pch = ".", cex = 3)
-abline(0, 1, lwd = 2)
+abline(0, 7.5, lwd = 2)
 dev.off()
+par(mfrow = c(1, 1), mar = c(4, 5, 2, 2))
 volcanoplot(fit2, coef = 2, highlight = 7, fit$genes$symbol, main = "Model 1", las = 1)
 top7 <- order(fit2$lods[, 2], decreasing = TRUE)[1:7]
 limma::plotMA(fit2, coef = 2, status = rownames(fit2$lods) %in% DEgenes2, legend = FALSE,
@@ -284,7 +291,7 @@ fit4$genes <- genesmd
 tt4 <- topTable(fit4, coef = 2, n = Inf)
 
 ### Functional annotation
-topgenes<-fit2$genes$symbol[top7]
+topgenes <- fit2$genes$symbol[top7]
 GeneGO <- select(org.Hs.eg.db, keys = topgenes, columns = c("ONTOLOGY","GO"), keytype = "SYMBOL")
 
 ### Functional enrichment analysis
@@ -298,7 +305,7 @@ params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUnivers
 conditional(params) <- TRUE
 hgOverCond <- hyperGTest(params)
 htmlReport(hgOverCond, file = "gotests.html")
-browseURL("gotests.html")
+# browseURL("gotests.html")
 goresults <- summary(hgOverCond)
 # Show key parameters already contained in goresults dataframes (redundant code)
 # head(geneCounts(hgOver))
