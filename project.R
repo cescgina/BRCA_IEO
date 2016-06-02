@@ -1,6 +1,10 @@
 library(SummarizedExperiment)
 library(geneplotter)
 library(edgeR)
+library(GOstats)
+library(sva)
+library(org.Hs.eg.db)
+library(xtable)
 
 se <- readRDS(file = "data/seBRCA.rds")
 
@@ -180,7 +184,6 @@ legend("bottomleft", paste(levels(factor(tss))),
        fill=sort(unique(batch)), inset=0.05, horiz=TRUE, cex=0.8)
 dev.off()
 ## Differential expression
-library(sva)
 mod <- model.matrix(~ se$type, colData(se))
 mod0 <- model.matrix(~ 1, colData(se))
 pv <- f.pvalue(assays(se)$logCPM, mod, mod0)
@@ -281,4 +284,35 @@ fit4$genes <- genesmd
 tt4 <- topTable(fit4, coef = 2, n = Inf)
 
 ### Functional annotation
-library(org.Hs.eg.db)
+topgenes<-fit2$genes$symbol[top7]
+GeneGO <- select(org.Hs.eg.db, keys = topgenes, columns = c("ONTOLOGY","GO"), keytype = "SYMBOL")
+
+### Functional enrichment analysis
+geneUniverse <- select(org.Hs.eg.db, keys = rownames(se), columns = "ENTREZID", keytype = "SYMBOL")
+geneUniverse <- geneUniverse$ENTREZID
+DEgenes <- select(org.Hs.eg.db, keys = DEgenes2, columns = "ENTREZID", keytype = "SYMBOL")
+DEgenes <- DEgenes$ENTREZID
+params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse,
+              annotation = "org.Hs.eg.db", ontology = "BP",
+              pvalueCutoff = 0.05, testDirection = "over")
+conditional(params) <- TRUE
+hgOverCond <- hyperGTest(params)
+htmlReport(hgOverCond, file = "gotests.html")
+browseURL("gotests.html")
+goresults <- summary(hgOverCond)
+# Show key parameters already contained in goresults dataframes (redundant code)
+# head(geneCounts(hgOver))
+# head(universeCounts(hgOver))
+# head(pvalues(hgOver))
+goresults <- goresults[goresults$Size >= 5 & goresults$Count >= 5, ]
+goresults <- goresults[order(goresults$OddsRatio, decreasing = TRUE), ]
+head(goresults)
+# Extract results
+geneIDs <- geneIdsByCategory(hgOverCond)[goresults$GOBPID]
+geneSYMs <- sapply(geneIDs, function(id) select(org.Hs.eg.db, columns = "SYMBOL", key = id, keytype = "ENTREZID")$SYMBOL)
+geneSYMs <- sapply(geneSYMs, paste, collapse = ", ")
+goresults <- cbind(goresults, Genes = geneSYMs)
+rownames(goresults) <- 1:nrow(goresults)
+#Export table with results
+xtab <- xtable(goresults, align = "l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
+print(xtab, file = "goresults.html", type = "html")
