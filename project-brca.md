@@ -706,10 +706,10 @@ There are 8393 genes changing significantly
 their expression at FDR < 1%. In Figure S8 below we show the distribution of the
 resulting p-values.
 
-<img src="figure/pdist-1.png" title="Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples." alt="Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples.</p>
+<img src="figure/pdist-1.png" title="Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples." alt="Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S8: Distribution of raw p-values for an F-test on every gene between tumor and normal samples.</p>
 We see how a vast majority of our genes have a low p-value, to check the distribution of the rest of genes we will plot the histogram of the not significantly expressed genes, this histogram should correspond more or less to a uniform distribution.
 
-<img src="figure/pdistzoom-1.png" title="Figure S9: Distribution of p-values which are not significant." alt="Figure S9: Distribution of p-values which are not significant." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S9: Distribution of p-values which are not significant.</p>
+<img src="figure/pdistzoom-1.png" title="Figure S9: Distribution of p-values which are not significant." alt="Figure S9: Distribution of p-values which are not significant." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S9: Distribution of p-values which are not significant.</p>
 
 The p-values are not perfectly uniform, although it does not seem too bad. Now, let's estimate surrogate variables using the `sva()` function.
 
@@ -740,7 +740,7 @@ surrogate variables.
 modsv <- cbind(mod, sv$sv)
 mod0sv <- cbind(mod0, sv$sv)
 pvsv <- f.pvalue(assays(se)$logCPM, modsv, mod0sv)
-sum(p.adjust(pvsv, method="fdr") < 0.01)
+sum(p.adjust(pvsv, method = "fdr") < 0.01)
 ```
 
 ```
@@ -750,11 +750,11 @@ sum(p.adjust(pvsv, method="fdr") < 0.01)
 We have increased the number of changing genes to 9450.
 Figure S10 shows the resulting distribution of p-values.
 
-<img src="figure/psvdist-1.png" title="Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA." alt="Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.</p>
+<img src="figure/psvdist-1.png" title="Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA." alt="Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA." width="550px" style="display: block; margin: auto;" /><p class="caption">Figure S10: Distribution of raw p-values for an F-test on every gene between tumor and normal samples, adjusting for surrogate variables estimated with SVA.</p>
 
 Once again, we see how a vast majority of our genes have a low p-value, to check the distribution of the rest of genes we will plot the histogram of the not significantly expressed genes.
 
-<img src="figure/psvdistzoom-1.png" title="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA." alt="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA.</p>
+<img src="figure/psvdistzoom-1.png" title="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA." alt="Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S11: Distribution of p-values which are not significant after adjusting for surrogate variables estimated with SVA.</p>
 
 The p-values are not perfectly uniform, but the distribution seems a bit more uniform after adjusting.
 
@@ -774,7 +774,7 @@ design <- model.matrix(~ type, data = colData(se))
 ```r
 v <- voom(dge, design, plot = FALSE)
 ```
-<img src="figure/voom-1.png" title="Figure S12: Mean variance trend for our logCPM values." alt="Figure S12: Mean variance trend for our logCPM values." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S12: Mean variance trend for our logCPM values.</p>
+<img src="figure/voom-1.png" title="Figure S12: Mean variance trend for our logCPM values." alt="Figure S12: Mean variance trend for our logCPM values." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S12: Mean variance trend for our logCPM values.</p>
 
 3. Fit linear model:
 
@@ -807,15 +807,197 @@ tt <- topTable(fit, coef = 2, n = Inf)
 ```
 
 To evaluate the model we will plot the distribution of p values and the qqplot:
-<img src="figure/diagnostic1-1.png" title="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." alt="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot.</p>
+<img src="figure/diagnostic1-1.png" title="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." alt="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." width="600px" style="display: block; margin: auto;" /><p class="caption">Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot.</p>
 As we can see....
 
 Next, we create a volcano plot with the results of the DE analysis
-<img src="figure/volcano1-1.png" title="Figure S14: Volcano plot of the results of the DE analysis." alt="Figure S14: Volcano plot of the results of the DE analysis." width="400px" style="display: block; margin: auto;" /><p class="caption">Figure S14: Volcano plot of the results of the DE analysis.</p>
+<img src="figure/volcano1-1.png" title="Figure S14: Volcano plot of the results of the DE analysis." alt="Figure S14: Volcano plot of the results of the DE analysis." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S14: Volcano plot of the results of the DE analysis.</p>
 
-....
+Before moving on, we redo the analysis with a new model considering the paired design that we have used:
 
+```r
+colData(se)$newpatient <- droplevels(colData(se)$bcr_patient_barcode)
+designpaired <- model.matrix(~ type + newpatient, data = colData(se))
+mod0 <- model.matrix(~ newpatient, data = colData(se))
+sv <- sva(v$E, mod = designpaired, mod0 = mod0)
+```
 
+```
+Number of significant surrogate variables is:  14 
+Iteration (out of 5 ):1  2  3  4  5  
+```
+
+```r
+lencols <- length(colnames(designpaired))
+designpaired <- cbind(designpaired, sv$sv)
+colnames(designpaired) <- c(colnames(designpaired)[1:lencols], paste0("SV", 1:sv$n))
+fitpaired <- lmFit(v, designpaired)
+fitpaired <- eBayes(fitpaired)
+respaired <- decideTests(fitpaired, p.value = FDRcutoff)
+summary(respaired)
+```
+
+```
+   (Intercept) typetumor newpatientTCGA-A7-A0CH newpatientTCGA-A7-A0D9
+-1           7      4811                     12                     56
+0          239      1648                  11832                  11678
+1        11609      5396                     11                    121
+   newpatientTCGA-A7-A13F newpatientTCGA-AC-A23H newpatientTCGA-AC-A2FB
+-1                     28                     43                     10
+0                   11786                  11765                  11839
+1                      41                     47                      6
+   newpatientTCGA-AC-A2FF newpatientTCGA-AC-A2FM newpatientTCGA-BH-A0AU
+-1                     24                     24                     22
+0                   11811                  11805                  11804
+1                      20                     26                     29
+   newpatientTCGA-BH-A0AY newpatientTCGA-BH-A0AZ newpatientTCGA-BH-A0B3
+-1                      4                     21                     17
+0                   11842                  11810                  11827
+1                       9                     24                     11
+   newpatientTCGA-BH-A0B5 newpatientTCGA-BH-A0B7 newpatientTCGA-BH-A0B8
+-1                     27                     14                     42
+0                   11795                  11825                  11777
+1                      33                     16                     36
+   newpatientTCGA-BH-A0BA newpatientTCGA-BH-A0BC newpatientTCGA-BH-A0BJ
+-1                      7                     19                     23
+0                   11841                  11813                  11808
+1                       7                     23                     24
+   newpatientTCGA-BH-A0BM newpatientTCGA-BH-A0BQ newpatientTCGA-BH-A0BS
+-1                     51                      6                     24
+0                   11763                  11841                  11806
+1                      41                      8                     25
+   newpatientTCGA-BH-A0BT newpatientTCGA-BH-A0BV newpatientTCGA-BH-A0BW
+-1                     23                     14                     53
+0                   11818                  11824                  11738
+1                      14                     17                     64
+   newpatientTCGA-BH-A0BZ newpatientTCGA-BH-A0C0 newpatientTCGA-BH-A0C3
+-1                     11                     40                     17
+0                   11835                  11791                  11817
+1                       9                     24                     21
+   newpatientTCGA-BH-A0DD newpatientTCGA-BH-A0DG newpatientTCGA-BH-A0DH
+-1                    167                     26                     28
+0                   11570                  11793                  11810
+1                     118                     36                     17
+   newpatientTCGA-BH-A0DK newpatientTCGA-BH-A0DL newpatientTCGA-BH-A0DO
+-1                      4                     41                     13
+0                   11845                  11784                  11825
+1                       6                     30                     17
+   newpatientTCGA-BH-A0DP newpatientTCGA-BH-A0DQ newpatientTCGA-BH-A0DT
+-1                     11                     11                      8
+0                   11835                  11835                  11838
+1                       9                      9                      9
+   newpatientTCGA-BH-A0DV newpatientTCGA-BH-A0DZ newpatientTCGA-BH-A0E0
+-1                     33                     23                     44
+0                   11794                  11809                  11786
+1                      28                     23                     25
+   newpatientTCGA-BH-A0E1 newpatientTCGA-BH-A0H5 newpatientTCGA-BH-A0H7
+-1                     21                     11                     40
+0                   11813                  11837                  11757
+1                      21                      7                     58
+   newpatientTCGA-BH-A0H9 newpatientTCGA-BH-A0HA newpatientTCGA-BH-A0HK
+-1                     46                     35                     22
+0                   11705                  11785                  11804
+1                     104                     35                     29
+   newpatientTCGA-BH-A18J newpatientTCGA-BH-A18K newpatientTCGA-BH-A18L
+-1                     44                     15                     33
+0                   11781                  11831                  11783
+1                      30                      9                     39
+   newpatientTCGA-BH-A18M newpatientTCGA-BH-A18N newpatientTCGA-BH-A18P
+-1                     11                     16                     40
+0                   11829                  11823                  11749
+1                      15                     16                     66
+   newpatientTCGA-BH-A18Q newpatientTCGA-BH-A18R newpatientTCGA-BH-A18S
+-1                     75                     50                     12
+0                   11723                  11730                  11828
+1                      57                     75                     15
+   newpatientTCGA-BH-A18U newpatientTCGA-BH-A1EN newpatientTCGA-BH-A1EO
+-1                     40                     13                     43
+0                   11770                  11820                  11760
+1                      45                     22                     52
+   newpatientTCGA-BH-A1ET newpatientTCGA-BH-A1EU newpatientTCGA-BH-A1EV
+-1                     11                     13                     71
+0                   11821                  11836                  11702
+1                      23                      6                     82
+   newpatientTCGA-BH-A1EW newpatientTCGA-BH-A1F0 newpatientTCGA-BH-A1F2
+-1                     46                     23                     43
+0                   11745                  11815                  11739
+1                      64                     17                     73
+   newpatientTCGA-BH-A1F6 newpatientTCGA-BH-A1F8 newpatientTCGA-BH-A1FB
+-1                     54                     10                     13
+0                   11754                  11833                  11827
+1                      47                     12                     15
+   newpatientTCGA-BH-A1FC newpatientTCGA-BH-A1FD newpatientTCGA-BH-A1FG
+-1                     49                    107                     27
+0                   11753                  11599                  11813
+1                      53                    149                     15
+   newpatientTCGA-BH-A1FH newpatientTCGA-BH-A1FJ newpatientTCGA-BH-A1FM
+-1                     22                     81                     28
+0                   11812                  11732                  11795
+1                      21                     42                     32
+   newpatientTCGA-BH-A1FN newpatientTCGA-BH-A1FR newpatientTCGA-BH-A1FU
+-1                     70                     19                     17
+0                   11703                  11823                  11816
+1                      82                     13                     22
+   newpatientTCGA-BH-A203 newpatientTCGA-BH-A204 newpatientTCGA-BH-A208
+-1                     32                      9                     25
+0                   11763                  11830                  11789
+1                      60                     16                     41
+   newpatientTCGA-BH-A209 newpatientTCGA-E2-A153 newpatientTCGA-E2-A158
+-1                     16                     13                    116
+0                   11815                  11832                  11624
+1                      24                     10                    115
+   newpatientTCGA-E2-A15I newpatientTCGA-E2-A15M newpatientTCGA-E2-A1BC
+-1                     57                     12                     62
+0                   11732                  11826                  11716
+1                      66                     17                     77
+   newpatientTCGA-E2-A1IG newpatientTCGA-E2-A1L7 newpatientTCGA-E2-A1LB
+-1                     18                     18                     71
+0                   11810                  11817                  11667
+1                      27                     20                    117
+   newpatientTCGA-E2-A1LH newpatientTCGA-E2-A1LS newpatientTCGA-E9-A1N4
+-1                     37                     91                     49
+0                   11777                  11552                  11712
+1                      41                    212                     94
+   newpatientTCGA-E9-A1N5 newpatientTCGA-E9-A1N6 newpatientTCGA-E9-A1N9
+-1                     40                     32                     21
+0                   11789                  11775                  11808
+1                      26                     48                     26
+   newpatientTCGA-E9-A1NA newpatientTCGA-E9-A1ND newpatientTCGA-E9-A1NF
+-1                     49                     20                     43
+0                   11726                  11820                  11750
+1                      80                     15                     62
+   newpatientTCGA-E9-A1NG newpatientTCGA-E9-A1R7 newpatientTCGA-E9-A1RB
+-1                     16                     20                    115
+0                   11816                  11821                  11599
+1                      23                     14                    141
+   newpatientTCGA-E9-A1RC newpatientTCGA-E9-A1RD newpatientTCGA-E9-A1RF
+-1                     67                      6                    124
+0                   11719                  11836                  11537
+1                      69                     13                    194
+   newpatientTCGA-E9-A1RH newpatientTCGA-E9-A1RI newpatientTCGA-GI-A2C8
+-1                     41                      8                    389
+0                   11743                  11838                  11089
+1                      71                      9                    377
+   newpatientTCGA-GI-A2C9   SV1   SV2   SV3   SV4   SV5   SV6   SV7   SV8
+-1                     59  4118  3890  3950  3503  2481  1609  1853  1928
+0                   11732  3665  3972  3749  5024  6983  8467  7799  8127
+1                      64  4072  3993  4156  3328  2391  1779  2203  1800
+     SV9  SV10  SV11  SV12  SV13  SV14
+-1  1826  1602   702   353   952   478
+0   8163  9041 10361 10929  9888 10983
+1   1866  1212   792   573  1015   394
+```
+
+```r
+ttpaired <- topTable(fitpaired, coef = 2, n = Inf)
+```
+
+To evaluate the model we will plot the distribution of p values and the qqplot:
+<img src="figure/diagnostic2-1.png" title="Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot." alt="Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot." width="600px" style="display: block; margin: auto;" /><p class="caption">Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot.</p>
+As we can see....
+
+Next, we create a volcano plot with the results of the DE analysis
+<img src="figure/volcano2-1.png" title="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design." alt="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S16: Volcano plot of the results of the DE analysis for the model with paired design.</p>
 Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological process
 
 
@@ -888,13 +1070,13 @@ attached base packages:
 [8] methods   base     
 
 other attached packages:
- [1] BiocInstaller_1.22.2       markdown_0.7.7            
- [3] knitr_1.13                 GO.db_3.3.0               
- [5] xtable_1.8-2               org.Hs.eg.db_3.3.0        
- [7] sva_3.20.0                 genefilter_1.54.2         
- [9] mgcv_1.8-12                nlme_3.1-128              
-[11] geneplotter_1.50.0         annotate_1.50.0           
-[13] XML_3.98-1.4               lattice_0.20-33           
+ [1] GO.db_3.3.0                xtable_1.8-2              
+ [3] org.Hs.eg.db_3.3.0         BiocInstaller_1.22.2      
+ [5] sva_3.20.0                 genefilter_1.54.2         
+ [7] mgcv_1.8-12                nlme_3.1-128              
+ [9] geneplotter_1.50.0         annotate_1.50.0           
+[11] XML_3.98-1.4               lattice_0.20-33           
+[13] markdown_0.7.7             knitr_1.13                
 [15] SummarizedExperiment_1.2.2 GenomicRanges_1.24.0      
 [17] GenomeInfoDb_1.8.1         GOstats_2.38.0            
 [19] graph_1.50.0               Category_2.38.0           
@@ -904,12 +1086,11 @@ other attached packages:
 [27] edgeR_3.14.0               limma_3.28.5              
 
 loaded via a namespace (and not attached):
- [1] formatR_1.4            highr_0.6              RColorBrewer_1.1-2    
+ [1] RColorBrewer_1.1-2     formatR_1.4            highr_0.6             
  [4] XVector_0.12.0         tools_3.3.0            zlibbioc_1.18.0       
  [7] digest_0.6.9           RSQLite_1.0.0          evaluate_0.9          
 [10] DBI_0.4-1              stringr_1.0.0          grid_3.3.0            
 [13] GSEABase_1.34.0        RBGL_1.48.1            survival_2.39-4       
 [16] magrittr_1.5           codetools_0.2-14       splines_3.3.0         
-[19] mime_0.4               AnnotationForge_1.14.2 KernSmooth_2.23-15    
-[22] stringi_1.1.1         
+[19] AnnotationForge_1.14.2 KernSmooth_2.23-15     stringi_1.1.1         
 ```
