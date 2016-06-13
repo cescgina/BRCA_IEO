@@ -1005,14 +1005,12 @@ Next, we proceed to the functional enrichment analysis focusing on the Gene Onto
 library(GOstats)
 library(org.Hs.eg.db)
 library(xtable)
-DEgenes2 <- rownames(tt)[tt$adj.P.Val < FDRcutoff]
+DEgenes2 <- rownames(ttpaired)[ttpaired$adj.P.Val < FDRcutoff]
 geneUniverse <- select(org.Hs.eg.db, keys = rownames(se), columns = "ENTREZID", keytype = "SYMBOL")
 geneUniverse <- geneUniverse$ENTREZID
 DEgenes <- select(org.Hs.eg.db, keys = DEgenes2, columns = "ENTREZID", keytype = "SYMBOL")
 DEgenes <- DEgenes$ENTREZID
-params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse,
-              annotation = "org.Hs.eg.db", ontology = "BP",
-              pvalueCutoff = 0.05, testDirection = "over")
+params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse, annotation = "org.Hs.eg.db", ontology = "BP", pvalueCutoff = 0.05, testDirection = "over")
 conditional(params) <- TRUE
 hgOverCond <- hyperGTest(params)
 htmlReport(hgOverCond, file = "gotests.html")

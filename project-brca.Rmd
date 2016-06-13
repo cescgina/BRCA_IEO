@@ -390,7 +390,7 @@ par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 #hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1, log = TRUE)
 plot(pvalfreq$mids, log10(pvalfreq$counts), type = 'h', lwd = 4, lend = 2, ylim = c(0,4), xlab = "Raw P-values", ylab = "Log10 frequencies", main = "", las = 1, cex.lab = 1.5, cex.axis = 1.5)
 qqt(fit$t[, 2], df = fit$df.prior + fit$df.residual, main = "", pch = ".", cex.lab = 1.5, cex.axis = 1.5)
-abline(0, 7.5, lwd = 2)
+abline(0, 1, lwd = 2)
 ```
 As we can see....
 
@@ -423,13 +423,13 @@ par(mfrow = c(1, 2), mar = c(4, 5, 2, 2))
 #hist(tt$P.Value, xlab = "Raw P-values", main = "", las = 1, log = TRUE)
 plot(pvalfreqpair$mids, log10(pvalfreqpair$counts), type = 'h', lwd = 4, lend = 2, ylim = c(0,4), xlab = "Raw P-values", ylab = "Log10 frequencies", main = "", las = 1, cex.lab = 1.5, cex.axis = 1.5)
 qqt(fitpaired$t[, 2], df = fitpaired$df.prior + fitpaired$df.residual, main = "", pch = ".", cex.lab = 1.5, cex.axis = 1.5)
-abline(0, 8.5, lwd = 2)
+abline(0, 1, lwd = 2)
 ```
 As we can see....
 
 Next, we create a volcano plot with the results of the DE analysis
 ```{r volcano2, echo=FALSE, out.width="500px", fig.cap="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design."}
-par(mar = c(4, 5, 2, 2), cex = 1.2)
+par(mar = c(4, 5, 2, 2), cex = 0.8)
 volcanoplot(fitpaired, coef = 2, highlight = 7, fitpaired$genes$symbol, main = "Model 1", las = 1, cex.lab = 1.5, cex.axis = 1.5)
 ```
 Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological process
@@ -438,14 +438,12 @@ Next, we proceed to the functional enrichment analysis focusing on the Gene Onto
 library(GOstats)
 library(org.Hs.eg.db)
 library(xtable)
-DEgenes2 <- rownames(tt)[tt$adj.P.Val < FDRcutoff]
+DEgenes2 <- rownames(ttpaired)[ttpaired$adj.P.Val < FDRcutoff]
 geneUniverse <- select(org.Hs.eg.db, keys = rownames(se), columns = "ENTREZID", keytype = "SYMBOL")
 geneUniverse <- geneUniverse$ENTREZID
 DEgenes <- select(org.Hs.eg.db, keys = DEgenes2, columns = "ENTREZID", keytype = "SYMBOL")
 DEgenes <- DEgenes$ENTREZID
-params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse,
-              annotation = "org.Hs.eg.db", ontology = "BP",
-              pvalueCutoff = 0.05, testDirection = "over")
+params <- new("GOHyperGParams", geneIds = DEgenes, universeGeneIds = geneUniverse, annotation = "org.Hs.eg.db", ontology = "BP", pvalueCutoff = 0.05, testDirection = "over")
 conditional(params) <- TRUE
 hgOverCond <- hyperGTest(params)
 htmlReport(hgOverCond, file = "gotests.html")
