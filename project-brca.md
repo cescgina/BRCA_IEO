@@ -684,7 +684,7 @@ legend("bottomleft", paste(levels(factor(tss))),
 
 <img src="figure/mds-1.png" title="Figure S7: Multidimensional scaling plot of the samples." alt="Figure S7: Multidimensional scaling plot of the samples." style="display: block; margin: auto;" /><p class="caption">Figure S7: Multidimensional scaling plot of the samples.</p>
 
-## Differential expression
+## Differential expression (DE)
 
 We perform a simple examination of expression changes and their associated p-values
 using the R/Bioconductor package [sva](http://bioconductor.org/packages/sva).
@@ -760,7 +760,7 @@ The p-values are not perfectly uniform, but the distribution seems a bit more un
 
 Next, we perform a differential expression analysis using a linear model with the package [limma](http://bioconductor.org/packages/limma). We start with a simple model considering only the type of sample as our variable of interest, and follow the typical limma workflow:
 
-1. Build design matrix
+* Build design matrix
 
 
 ```r
@@ -768,7 +768,7 @@ library(limma)
 design <- model.matrix(~ type, data = colData(se))
 ```
 
-2. Calculate observational-level weights, the mean variance trend can be seen in figure :
+* Calculate observational-level weights, the mean variance trend can be seen in figure S12:
 
 
 ```r
@@ -776,17 +776,17 @@ v <- voom(dge, design, plot = FALSE)
 ```
 <img src="figure/voom-1.png" title="Figure S12: Mean variance trend for our logCPM values." alt="Figure S12: Mean variance trend for our logCPM values." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S12: Mean variance trend for our logCPM values.</p>
 
-3. Fit linear model:
+* Fit linear model:
 
 ```r
 fit <- lmFit(v, design)
 ```
-4. Calculate moderated t -statistics: 
+* Calculate moderated t-statistics: 
 
 ```r
 fit <- eBayes(fit)
 ```
-5. Examine the amount of differential expression at 10% FDR:
+* Examine the amount of differential expression at 10% FDR:
 
 ```r
 FDRcutoff <- 0.1
@@ -800,7 +800,7 @@ summary(res)
 0           30      2292
 1        11815      5065
 ```
-6. Output results:
+* Output results:
 
 ```r
 tt <- topTable(fit, coef = 2, n = Inf)
@@ -808,12 +808,15 @@ tt <- topTable(fit, coef = 2, n = Inf)
 
 To evaluate the model we will plot the distribution of p values and the qqplot:
 <img src="figure/diagnostic1-1.png" title="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." alt="Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot." width="600px" style="display: block; margin: auto;" /><p class="caption">Figure S13: Diagnostics plots for DE analysis: distribution of p-values and qqplot.</p>
-As we can see....
+In the left panel of figure S13 we can see the distribution of pvalues, with a logarithmic y-axis. Most of the genes are significantly differentially expressed, and the non-significant pvalues approximately follow a uniform distribution. In the right panel we can see a qqt plot, with a linear tendency with slope greater than one (solid line corresponds to slope 1). This means that the quantiles of the sample distribution are more disperse than the theoretical t-Student distribution, although it also indicates that there is no presence of heavy tails in the sample distribution.
 
 Next, we create a volcano plot with the results of the DE analysis
 <img src="figure/volcano1-1.png" title="Figure S14: Volcano plot of the results of the DE analysis." alt="Figure S14: Volcano plot of the results of the DE analysis." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S14: Volcano plot of the results of the DE analysis.</p>
 
-Before moving on, we redo the analysis with a new model considering the paired design that we have used:
+The volcano plot highlights the following genes: NSMAF and COL12A1 (overexpressed) and WDR12, ADAMTS5, HTN1, TMTC3 and KRTAP9-4 (underexpressed). Most of the points have low values of the Log Fold changes (both positive and negative), although there is a remarkable amount of genes with great Log Fold change value and Log Odds value.
+
+Since previously we have used a paired design criteria to subset the data, we will introuce the paired design into the model before continuing with the analysis. To do so we will use the bcr_patient_barcode variable, although first we will use the droplevels command to drop the levels corresponding to samples that have been taken out previously. Once we have done that we proceed to create the model following the same steps previously described, with the addition of a surrogate variables analysis to account for unknown covariates.
+
 
 ```r
 colData(se)$newpatient <- droplevels(colData(se)$bcr_patient_barcode)
@@ -994,11 +997,15 @@ ttpaired <- topTable(fitpaired, coef = 2, n = Inf)
 
 To evaluate the model we will plot the distribution of p values and the qqplot:
 <img src="figure/diagnostic2-1.png" title="Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot." alt="Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot." width="600px" style="display: block; margin: auto;" /><p class="caption">Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot.</p>
-As we can see....
+As we can see, the diagnostics plots yield basically the same results, an approximately uniform pvaules distribtuion (apart from the DE genes) and a linear qqt plot with slope much higher than one.
 
 Next, we create a volcano plot with the results of the DE analysis
+
 <img src="figure/volcano2-1.png" title="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design." alt="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S16: Volcano plot of the results of the DE analysis for the model with paired design.</p>
-Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological process
+
+The volcano plot also shows a similar result to figure S14, but with slightly different highlighted genes. It also highlights COL12A1 and NSMAF (overexpressed) and ADAMTS5 (underexpressed) but it also highlights FSBP (overexpressed) and INPP1, SNORD36B and SNORD36B (underexpressed).
+
+Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological processes. To do so, we will use the packages GOstats and org.Hs.eg.db:
 
 
 ```r
@@ -1017,9 +1024,9 @@ htmlReport(hgOverCond, file = "gotests.html")
 goresults <- summary(hgOverCond)
 ```
 
-Setup of the analysis with conditional...
+We setup the GO analysis by creating the gene universe set and the DE genes set. Since we have use the gene symbols as identifiers, now we need to use the annotation package to retrieve the ENTREZ ids in order to use the GOStats package. We set a pvalue cutoff of 0.05 and set the analysis as a conditional analysis, to obtain more relevant results. The results of the analysis are written to an html file for ease of visualization.
 
-Then filtering the results....
+Next, we proceed to filter the results. Specifically, we only consider GO terms with gene size and gene counts greater than 5, since those with size smaller than 5 are not so reliable. The results are ordered by the Odds ratio.
 
 ```r
 goresults <- goresults[goresults$Size >= 5 & goresults$Count >= 5, ]
@@ -1033,7 +1040,7 @@ xtab <- xtable(goresults, align = "l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 print(xtab, file = "goresults.html", type = "html")
 ```
 
-The results have been exported to html files, which are much easier to visualize.
+The results after the filtering are exported again to an html file. This time there is an extra column with the names of the genes contained in each term.
 
 ## Conclusion
 
@@ -1042,6 +1049,12 @@ The different QA diagnostics reveal some potentially problematic features in som
 The main source of variation in this data seems to be driven by the tumor and normal condition of the samples. We have found no batch effect using the information from the TGCA barcode. 
 
 The extent of expression changes can be augmented when adjusting for surrogate variables estimated with SVA. Furthermore, the p-values that are not significant are distributed reasonably uniformly, and the distribution seems to improve after the SVA. Additionally, it would be interesting to observe how that extent changes when discarding potentially problematic samples.
+
+Conclusion for DE...
+
+Conclusions for differents models...
+
+Conclusion for GO analysis...
 
 ## Session information
 
