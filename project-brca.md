@@ -1003,7 +1003,7 @@ Next, we create a volcano plot with the results of the DE analysis
 
 <img src="figure/volcano2-1.png" title="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design." alt="Figure S16: Volcano plot of the results of the DE analysis for the model with paired design." width="500px" style="display: block; margin: auto;" /><p class="caption">Figure S16: Volcano plot of the results of the DE analysis for the model with paired design.</p>
 
-The volcano plot also shows a similar result to figure S14, but with slightly different highlighted genes. It also highlights COL12A1 and NSMAF (overexpressed) and ADAMTS5 (underexpressed) but it also highlights FSBP (overexpressed) and INPP1, SNORD36B and SNORD36B (underexpressed).
+The volcano plot also shows a similar result to figure S14, but with slightly different highlighted genes. It also highlights COL12A1 and NSMAF (overexpressed) and ADAMTS5 (underexpressed) but it also highlights FSBP (overexpressed) and INPP1, SNORD36A and SNORD36B (underexpressed).
 
 Next, we proceed to the functional enrichment analysis focusing on the Gene Ontology biological processes. To do so, we will use the packages GOstats and org.Hs.eg.db:
 
@@ -1050,12 +1050,11 @@ The main source of variation in this data seems to be driven by the tumor and no
 
 The extent of expression changes can be augmented when adjusting for surrogate variables estimated with SVA. Furthermore, the p-values that are not significant are distributed reasonably uniformly, and the distribution seems to improve after the SVA. Additionally, it would be interesting to observe how that extent changes when discarding potentially problematic samples.
 
-Conclusion for DE...
+The DE analysis with the linear models renders a similar situation than that described in the previous paragraph. A vast majority of the genes are differentially expressed, with an approximately uniform pvalues distribution for the non-significant pvalues.
 
-Conclusions for differents models...
+We have used two different models, one with only the sample type (normal or tumor) and one with the sample type and the patient barcode. The latter model fits better the paired design used to subset the samples. Both models yield similar results, although for example the top DE genes are slightly different. It would be interesting to examine the differences obtained by models with additional variables, such as the age of the patient or the type of tumor.
 
-Conclusion for GO analysis...
-
+The Gene Ontology functional enrichment analysis results in multiple GO terms with high enrichment, which is to be expected given the astonishing number of DE genes. Even after filtering for terms with sufficient gene set size (at least 5), the situation persists. Conclusion about results....
 ## Session information
 
 
