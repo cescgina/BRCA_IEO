@@ -487,6 +487,7 @@ The DE analysis with the linear models renders a similar situation than that des
 We have used two different models, one with only the sample type (normal or tumor) and one with the sample type and the patient barcode. The latter model fits better the paired design used to subset the samples. Both models yield similar results, although for example the top DE genes are slightly different. It would be interesting to examine the differences obtained by models with additional variables, such as the age of the patient or the type of tumor.
 
 The Gene Ontology functional enrichment analysis results in multiple GO terms with high enrichment, which is to be expected given the astonishing number of DE genes. Even after filtering for terms with sufficient gene set size (at least 5), the situation persists. Conclusion about results....
+
 ## Session information
 
 ```{r}
