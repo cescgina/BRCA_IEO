@@ -997,7 +997,7 @@ ttpaired <- topTable(fitpaired, coef = 2, n = Inf)
 
 To evaluate the model we will plot the distribution of p values and the qqplot:
 <img src="figure/diagnostic2-1.png" title="Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot." alt="Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot." width="600px" style="display: block; margin: auto;" /><p class="caption">Figure S15: Diagnostics plots for DE analysis for the model with paired design: distribution of p-values and qqplot.</p>
-As we can see, the diagnostics plots yield basically the same results, an approximately uniform pvaules distribtuion (apart from the DE genes) and a linear qqt plot with slope much higher than one.
+As we can see, the diagnostics plots yield basically the same results, an approximately uniform pvaules distribtuion (apart from the DE genes) and a linear qqt plot with slope much higher than one. In a related note, the first model yields 9563 DE genes, while the second yields 10207 DE genes. Therefore, the introduction of the patient barcode increases the statistical power of our model.
 
 Next, we create a volcano plot with the results of the DE analysis
 
@@ -1040,7 +1040,7 @@ xtab <- xtable(goresults, align = "l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 print(xtab, file = "goresults.html", type = "html")
 ```
 
-The results after the filtering are exported again to an html file. This time there is an extra column with the names of the genes contained in each term.
+The results after the filtering are exported again to an html file. This time there is an extra column with the names of the genes contained in each term. Little more about results....
 
 ## Conclusion
 
@@ -1052,7 +1052,7 @@ The extent of expression changes can be augmented when adjusting for surrogate v
 
 The DE analysis with the linear models renders a similar situation than that described in the previous paragraph. A vast majority of the genes are differentially expressed, with an approximately uniform pvalues distribution for the non-significant pvalues.
 
-We have used two different models, one with only the sample type (normal or tumor) and one with the sample type and the patient barcode. The latter model fits better the paired design used to subset the samples. Both models yield similar results, although for example the top DE genes are slightly different. It would be interesting to examine the differences obtained by models with additional variables, such as the age of the patient or the type of tumor.
+We have used two different models, one with only the sample type (normal or tumor) and one with the sample type and the patient barcode. The latter model fits better the paired design used to subset the samples. The second model lead to an increase of about 700 DE genes, increasing statistica power. It would be interesting to examine the differences obtained by models with additional variables, such as the age of the patient or the type of tumor.
 
 The Gene Ontology functional enrichment analysis results in multiple GO terms with high enrichment, which is to be expected given the astonishing number of DE genes. Even after filtering for terms with sufficient gene set size (at least 5), the situation persists. Conclusion about results....
 
