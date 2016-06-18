@@ -472,7 +472,8 @@ xtab <- xtable(goresults, align = "l|c|r|r|r|r|r|p{3cm}|p{3cm}|")
 print(xtab, file = "goresults.html", type = "html")
 ```
 
-The results after the filtering are exported again to an html file. This time there is an extra column with the names of the genes contained in each term. Little more about results....
+The results after the filtering are exported again to an html file. This time there is an extra column with the names of the genes contained in each term. For more information about the biological relevance of the GO terms obtained please see our paper "TCGA RNA-seq data analysis in breast invasive
+carcinoma".
 
 ## Conclusion
 
@@ -486,7 +487,7 @@ The DE analysis with the linear models renders a similar situation than that des
 
 We have used two different models, one with only the sample type (normal or tumor) and one with the sample type and the patient barcode. The latter model fits better the paired design used to subset the samples. The second model lead to an increase of about 700 DE genes, increasing statistica power. It would be interesting to examine the differences obtained by models with additional variables, such as the age of the patient or the type of tumor.
 
-The Gene Ontology functional enrichment analysis results in multiple GO terms with high enrichment, which is to be expected given the astonishing number of DE genes. Even after filtering for terms with sufficient gene set size (at least 5), the situation persists. Conclusion about results....
+The Gene Ontology functional enrichment analysis results in multiple GO terms with high enrichment, which is to be expected given the astonishing number of DE genes. Even after filtering for terms with sufficient gene set size (at least 5), the situation persists. 
 
 ## Session information
 

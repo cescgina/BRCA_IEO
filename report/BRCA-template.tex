@@ -20,12 +20,12 @@
 
 \runningtitle{TCGA RNA-seq data analysis in breast invasive carcinoma} % For use in the footer 
 
-\correspondingauthor{Corresponding Author}
+\correspondingauthor{Gilabert-Navarro, JF.}
 
 \begin{abstract}
 Breast cancer is the most common malignant cancer affecting
 women and is the second leading cause of cancer death world-
-wide. In this work, we have analyzed data from RNA-seq experiments provided by the TGCA. We have analyzed the differential expression of many genes between tumoral samples and non-tumoral samples, both obtained from the same individual, using a paired design. Sumary of results....
+wide. In this work, we have analyzed data from RNA-seq experiments provided by the TGCA. We have analyzed the differential expression of many genes between tumoral samples and non-tumoral samples, both obtained from the same individual, using a paired design. Using this model, we found about 10200 genes significantly differentially expressed deppending of the type of tissue. Finally, we performed a functional enrichment analysis with Gene Ontology (Biological Process) in order to see the pathways affected by these differentially expressed genes. In this way, we observed the inflammatory and metabolic processes as the main differentially expressed pathways in breast cancer.
 \end{abstract}
 
 \setboolean{displaycopyright}{true}
@@ -88,7 +88,7 @@ After that, we calculated the normalization factors on this new filtered data se
 \vspace{2mm}
 
 Batch effect identification tests were performed taking into account different elements of the TGCA barcode such as tissue source site, the center where the samples were processed, the plate, the sample vial and the portion analyte (molecular specimen extracted; total RNA or whole genome amplified for example). After considering the variables described above, we performed the tests related with the hierarchical clustering and multidimensional scaling examining the samples by the tissue source site (TSS). In this part we used again $log CPM$ values with a higher prior count to moderate extreme fold-changes produced by low counts. Finally, we generated a dendogram of hierarchical clustering of samples by TSS (see on $Results$ section). 
-\vspace{4mm}
+\vspace{2mm}
 
 \textbf{Differential expression analysis}
 \vspace{2mm}
@@ -122,47 +122,72 @@ Regarding the search of potential surrogate of Batch effect indicators, we analy
 We analyzed the number of surrogate variables (SV) for our model including both type of sample and patient barcode. The number of significant SVs were 14, so taking them into account, the linear model showed us that, only focusing in sample type, we have 4811 genes underexpressed and 5396 overexpressed in tumors vs healthy tissue. In addition, we have obtained a long list of over/underexpressed genes for each patient (106 in total, see in $Supplementary Material$).
 \vspace{2mm}
 
-p-value distributions and qqplots of both models created yielded similar results. With an approximately uniform p-value distribution of the non-significant p-values. In addition, the slope of the qqplots is much higher than 1 (more information in $Supplementary Material$). 
+p-value distributions and qqplots of both models created yielded similar results. We observed an approximately uniform p-value distribution of the non-significant p-values and a marked high frequency for the significant ones. In addition, the slope of the qqplots is much higher than 1 (more information in $Supplementary Material$). 
 \vspace{2mm}
 
-To compare the two models, we created volcano plots for both of them (Fjgure \ref{fig:spectrum}). The shape of the volcano plots are very similar, with some differences in the highlighted genes. Quantitatively, the second model (type of sample + patient barcode) yields about 700 more DE genes (see $Supplementary Material$ for further details), thus we see how the more complex model increases our statistical power.
+To compare the two models, we created volcano plots for both of them (Figure \ref{fig:spectrum}). The shape of the volcano plots are very similar, with some differences in the highlighted genes. Quantitatively, the second model (type of sample + patient barcode) yields about 650 more DE genes (see $Supplementary Material$ for further details), thus we see how the more complex model increases our statistical power. Finally, we consider 10200 genes significantly differentially expressed with a p-value < 0.05 and FDR of 10%.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=70mm]{volcanotex-1}
-\caption{Comparison of the volcano plots for the two models created }%
+\caption{Comparison of the volcano plots for the two models created. Model 1 only takes into account the type of sample (normal/tumor) and Model 2 takes also into account the paired samples (patient barcode).}%
 \label{fig:spectrum}
 \end{figure}
 
 \subsection*{Functional Enrichment Analysis} 
 \vspace{2mm}
-\section*{Conclusions}
 
-\section*{Acknowledgments}
+In this section we only 
+consider GO terms with gene size and gene counts greater than 5 in order to obtain more reliable results. An html file was generated containing all the detailed results ordered by Odds Ratio (See in $Supplementary Material$).
+\vspace{2mm}
+
+Before starting to analyze the main results obtained, it is important to take into account that these are the GO terms differentially expressed, but we don't know if these pathways are over-activated or repressed by this genetic differential expression. In addition, the genes inside each GO term could be over-expressed or under-expressed. Another important fact is that not all the genes implicated in one pathway have the same repercussions in it, some of them will help to the activation and other could inhibit the processes implicated. 
+\vspace{2mm}
+
+The results are summarized in Table \ref{table}. In the table, we can observe that the pathway with the highest Odds Ratio (Inf, not shown in Table \ref{table} for brevity, a fully detailed table is available in the $Suplementary Material$) and lowest p-value (0.0, theoretical) is the regulation of acute inflammatory result. In addition, the 4th position of the top 10 GO Terms it is also related with inflammation. This results are concordant with the scientific evidence that links inflammatory processes with the tumor development. It is well known how the inflammatory processes are risk factors in breast cancer by modulation of progression and response to treatment \citep{Murray01022015}. But not all inflammatory components are favourable to tumour tissue. We know that there are components such as some interleukins and some cytokines that improves tumour progression and development \citep{Esquivel-Velzquez2014}. In contraposition, other components such as tumor necrosis factors or some cytokines improves the protection against breast cancer \citep{Esquivel-Velzquez2014}. In this way, we could observe how the components of the same pathway could be dual roles in breast cancer. 
+\vspace{2mm}
+
+In addition, it is important also to reflect how inflammation is not an isolate and related process. This inflammatory implication could be produced by obesity, since it is estimated that the number of cancer cases caused by obesity are around 20\% \citep{DePergola2013,BaumgartenFrasor}. Severe overweight could lead to systemic inflammation that could provide proliferative advantages in tumor tissue \citep{Iyengar2013}.
+\vspace{2mm}
+
+Another important perturbation produced by obesity is done in metabolic pathways. Recent studies show relationship between cancer, obesity, type II diabetes and oxidative stress \citep{Ferroni2015,Flanagan2015} making our GO results stronger, since superoxide metabolic process and glucuronate metabolic process are between our top 10 enriched GO terms.
+\vspace{2mm}
+
+ 
 
 \begin{table}[ht]
 \centering
 \caption{\bf Top 10 enriched GO Terms}
 \begin{tableminipage}{\textwidth}
-\begin{tabular}{lcrcp{3cm}}
+\begin{tabular}{cccp{3cm}}
   \hline
- & Pvalue & Count & Size & Term\\ 
+ Pvalue & Count & Size & Term\\ 
   \hline
-1 & 0.00 &  36 &  36 & regulation of acute inflammatory response\\ 
-  2 & 0.01 &  32 &  32 & sodium ion homeostasis \\ 
-  3 & 0.02 &  28 &  28 & protein import into nucleus, translocation\\ 
-  4 & 0.02 &  27 &  27 & regulation of humoral immune response\\ 
-  5 & 0.02 &  26 &  26 & superoxide metabolic process \\ 
-  6 & 0.02&  26 &  26 & cellular response to vascular endothelial growth factor stimulus\\ 
-  7 & 0.02 &  25 &  25 & endochondral bone morphogenesis\\ 
-  8 & 0.03 &  23 &  23 & negative regulation of DNA replication\\ 
-  9 & 0.03 &  23 &  23 & glucuronate metabolic process\\ 
-  10& 0.04 &  22 &  22 & adult walking behavior\\ 
+0.00 &  36 &  36 & regulation of acute inflammatory response\\ 
+0.01 &  32 &  32 & sodium ion homeostasis \\ 
+0.02 &  28 &  28 & protein import into nucleus, translocation\\ 
+0.02 &  27 &  27 & regulation of humoral immune response\\ 
+0.02 &  26 &  26 & superoxide metabolic process \\ 
+0.02&  26 &  26 & cellular response to vascular endothelial growth factor stimulus\\ 
+0.02 &  25 &  25 & endochondral bone morphogenesis\\ 
+0.03 &  23 &  23 & negative regulation of DNA replication\\ 
+0.03 &  23 &  23 & glucuronate metabolic process\\ 
+0.04 &  22 &  22 & adult walking behavior\\ 
    \hline
 \end{tabular}
 \end{tableminipage}
 \label{table}
 \end{table}
+
+\section*{Conclusions}
+With all our analysis we could conclude that the main processes affected in breast invasive carcinoma are related with inflammation, metabolism, nucleus-DNA regulation processes, oxidative stress and angio/vasculogenesis (between others, less linked in our study). So, we observed pathways previously related in other previous studies with this and other types of cancer. So, our results confirms the scientific evidence and provide a bioinformatic tool approach in order to manage and extract and select relevant information in a fast way of high-troughput sequencing technologies.
+\vspace{2mm}
+
+It is also important to consider how all these paths are linked and how the molecules involved interact between them in order to be able to use this information to develop further studies that lead in a more personalized medicine focused in the molecular characteristics of each concrete tumor. 
+
+\section*{Acknowledgments}
+We wish to thank Universitat Pompeu Fabra and Dr. Robert Castelo for the lessons imparted and the help provided to manage all this data. We are grateful also with TCGA Project, which provided the data analyzed in this work.
+
 \bibliography{biblio.bib}
 
 \end{document}
