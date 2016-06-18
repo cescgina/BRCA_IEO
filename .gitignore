@@ -12,3 +12,4 @@ report/*.log
 report/*.gz
 report/*.blg
 report/*.bbl
+report/.fuse*
